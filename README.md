@@ -30,6 +30,8 @@ The following will start a RabbitMQ instance with default (guest/guest) credenti
 
 ```docker run -d --hostname my-rabbit --name my-rabbit -p 5672:5672 -p 15672:15672 rabbitmq:3-management```
 
+How to install and start the rest of the prerequisites can be found in their respective readme's.
+
 ## Messaging architecture
 
 ![Messaging architecture overview](doc/arch_messaging.png)
