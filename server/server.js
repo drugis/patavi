@@ -41,6 +41,8 @@ app.use(bodyParser.json());
 app.use(function(req, res, next) {
   if (req.header('Origin')) {
     res.header('Access-Control-Allow-Origin', req.header('Origin'));
+  } else {
+    res.header('Access-Control-Allow-Origin', 'http://addis.drugis.org');
   }
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
   res.header('Access-Control-Allow-Credentials', true);
