@@ -3,12 +3,14 @@
 Patavi server dockerfile
 ========================
 
+For more information on all components of the drugis project, please refer to the OVERALL-README.md in the root folder of the ADDIS-CORE project.
+
 Prerequisites:
 
- - Create an `ssl` directory, containing:
+ - Create an `ssl` directory (e.g. /patavi/server/ssl/), containing:
 
-   - `ssl/server-crt.pem` and `ssl/server-key.pem`, the public/private certificate/key pair for the server
-   - `ssl/ca-crt.pem`, the CA certificate for the server to trust client connections with
+   - `/server-crt.pem` and `/server-key.pem`, the public/private certificate/key pair for the server
+   - `/ca-crt.pem`, the CA certificate for the server to trust client connections with
 
 Building:
 
@@ -17,6 +19,7 @@ docker build -t patavi/server-amqp --build-arg sha=`git rev-parse --short HEAD` 
 ```
 
 Running:
+Make sure to have a rabbitmq container running.
 
 ```
 docker run -d --name patavi-server-amqp \
