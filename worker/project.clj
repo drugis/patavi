@@ -13,7 +13,7 @@
                  [org.clojure/tools.logging "0.2.6"]
                  [org.clojure/tools.cli "0.2.4"]
                  [environ "0.4.0"]
-                 [cheshire "5.2.0"]
+                 [cheshire "5.7.0"]
                  [log4j "1.2.17" :exclusions [javax.mail/mail
                                               javax.jms/jms
                                               com.sun.jdmk/jmxtools

@@ -65,7 +65,8 @@ var taskDescription = function(taskId, service, status) {
     'status': status,
     '_links': {
       self: { href: 'https:' + pataviSelf + '/task/' + taskId },
-      updates: { href: 'wss:' + pataviSelf + '/task/' + taskId + '/updates' }
+      updates: { href: 'wss:' + pataviSelf + '/task/' + taskId + '/updates' },
+      task: { href: 'https:' + pataviSelf + '/task/' + taskId + '/task' }
     }
   };
   if (status === 'failed' || status === 'done') {
@@ -154,8 +155,8 @@ var postTask = function(app, ch, statusExchange, replyTo) {
 
       res.status(201);
       res.location('https:' + pataviSelf + '/task/' + taskId);
-      var s = q.consumerCount === 0 ? 'no-workers' : 'unknown';
-      res.send(taskDescription(taskId, service, s));
+      var status = q.consumerCount === 0 ? 'no-workers' : 'unknown';
+      res.send(taskDescription(taskId, service, status));
     }
 
     async.waterfall([
@@ -214,7 +215,13 @@ app.get('/task/:taskId', function(req, res, next) {
     if (info.status === 'done' || info.status === 'failed') {
       res.header('Cache-Control', 'public, max-age=31557600'); // completed tasks never change
     }
-    res.send(taskDescription(taskId, info.service, info.status));
+    var taskInfo = taskDescription(taskId, info.service, info.status);
+    pataviStore.getScript(taskId, function(err) {
+      if (!err) {
+        taskInfo._links.script = { href: 'https:' + pataviSelf + '/task/' + taskId + '/script' };
+      }
+      res.send(taskInfo);
+    });
   });
 });
 
@@ -235,6 +242,48 @@ app.get('/status', function(req, res, next) {
     }));
   });
 });
+
+app.get('/task/:taskId/task', function(req, res, next) {
+  var taskId = req.params.taskId;
+  if (!isValidTaskId(taskId)) {
+    return next(badRequestError());
+  }
+  if (req.headers['if-modified-since'] || req.headers['if-none-match']) { // task never changes
+    res.status(304);
+    res.end();
+    return;
+  }
+  pataviStore.getTask(taskId, function(err, result) {
+    if (err) {
+      return next(err);
+    }
+    res.header('Content-Type', 'application/json');
+    res.header('Cache-Control', 'public, max-age=31557600'); // task never changes
+    res.send(result);
+  });
+});
+
+app.get('/task/:taskId/script', function(req, res, next) {
+  var taskId = req.params.taskId;
+  if (!isValidTaskId(taskId)) {
+    return next(badRequestError());
+  }
+  if (req.headers['if-modified-since'] || req.headers['if-none-match']) { // task never changes
+    res.status(304);
+    res.end();
+    return;
+  }
+  pataviStore.getScript(taskId, function(err, result) {
+    if (err) {
+      return next(err);
+    }
+    res.header('Content-Type', 'text/plain');
+    res.header('Cache-Control', 'public, max-age=31557600'); // task never changes
+    res.send(unescape(result));
+  });
+});
+
+
 
 app.get('/task/:taskId/results', function(req, res, next) {
   var taskId = req.params.taskId;
