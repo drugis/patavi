@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html ng-app="example">
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width" />
+    <title>Patavi is running!</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/foundation/5.5.3/css/foundation.min.css" />
+    <script data-main="js/app.js" src="bower_components/requirejs/require.js"></script>
+  </head>
+  <body>
+    <div class="row">
+      <div class="columns large-12"><h4><img src="img/patavi_small.png" alt="patavi logo"><small>up and running!</small></h4></div>
+    </div>
+    <div class="row">
+      <div class="columns large-12">
+        <p>
+        <strong>Congratulations!</strong> It looks like you have configured the server correctly. You can now start any number of workers and submit tasks to them through this dashboard.
+        </p>
+      </div>
+    </div>
+    <div ng-controller="TaskCtrl" class="row">
+      <div class="columns large-4">
+
+        <label>Service</label>
+        <input type="text" ng-model="service">
+        <label>Time to live (leave empty for indefinite)</label>
+        <input type="text" ng-model="ttl">
+        <label>Input (JSON)</label>
+        <textarea ng-model="input">
+        </textarea>
+        <button class="small secondary button" ng-click="submit(service, ttl, input)">Submit new task</button>
+      </div>
+      <div ng-repeat="task in tasks">
+        <hr>
+        <div class="columns">
+          <h2>Task {{task.id}}</h2>
+          <label>progress</label>
+          <div class="secondary radius progress large-6">
+            <span class="meter" ng-style="{width: (task.status.eventType === 'done' ? 100 : (task.status.eventData.progress || 0)) + '%'}"></span>
+          </div>
+          <div class="alert-box warning large-4" ng-show="task.warning">
+            {{ task.warning }}
+          </div>
+        </div>
+        <div class="columns" ng-show="task.status">
+          <h3 class="subheader">Status</h3>
+          <div class="panel"><pre>{{task.status | json}}</pre></div>
+        </div>
+        <div class="columns" ng-show="task.results">
+          <h3 class="subheader">Results</h3>
+          <div class="panel"><pre>{{task.results | json}}</pre></div>
+        </div>
+        <div class="columns" ng-show="task.error">
+          <h3 class="subheader">Error</h3>
+          <div class="panel"><pre>{{task.error | json}}</pre></div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
