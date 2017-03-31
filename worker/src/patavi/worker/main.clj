@@ -3,8 +3,11 @@
   (:require [patavi.worker.amqp :as amqp]
             [patavi.worker.pirate.core :as pirate]
             [clojure.tools.cli :refer [cli]]
+            [clojure.java.io :as io]
             [clojure.string :refer [split trim capitalize]]
             [clojure.tools.logging :as log]))
+
+(def ^:private script-file (atom nil))
 
 (defn -main
   [& args]
@@ -25,7 +28,8 @@
       (println banner)
       (System/exit 0))
     (pirate/initialize file packages rserve)
+    (reset! script-file file)
     (dotimes [n nworkers]
       (log/info "[main] started worker for" method)
-      (amqp/start method (partial pirate/execute method)))
+      (amqp/start method @script-file (partial pirate/execute method)))
     (while true (Thread/sleep 100))))
