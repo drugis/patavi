@@ -10,7 +10,7 @@ RUN apt-get upgrade -y
 
 # Install R and required R packages
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9
-RUN echo 'deb http://cran.rstudio.com/bin/linux/ubuntu trusty/' > /etc/apt/sources.list.d/cran.list
+RUN echo 'deb http://cran.rstudio.com/bin/linux/ubuntu xenial/' > /etc/apt/sources.list.d/cran.list
 RUN apt-get update
 RUN apt-get install -y -q r-base-dev
 RUN apt-get install -y -q libxt-dev libcairo2-dev
