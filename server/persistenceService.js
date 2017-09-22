@@ -17,7 +17,11 @@ function parseMultipart(content, contentType, callback) {
       });
       file.on('end', function() {
         if (fieldname === 'index') {
-          index = JSON.parse(content.toString());
+          try {
+            index = JSON.parse(content.toString());
+          } catch(e) {
+            callback('error parsing model: ' + content.toString());
+          }
         } else {
           files.push({ 'path': filename, 'content_type': mimetype, 'content': content });
         }
@@ -43,7 +47,7 @@ function parseMessage(content, contentType, callback) {
       var parsed = JSON.parse(content.toString());
       callback(null, { index: parsed, files: [] });
     } catch(err) {
-      callback(err);
+      callback('error parsing model: ' + content.toString());
     }
   } else if (contentType && contentType.startsWith(mp)) {
     parseMultipart(content, contentType, callback);
