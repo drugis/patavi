@@ -8,13 +8,13 @@ RUN apt-get upgrade -y
 
 # Install nodejs
 RUN apt-get install -y curl
-RUN curl -sL https://deb.nodesource.com/setup_5.x | bash -
+RUN curl -sL https://deb.nodesource.com/setup_8.x | bash -
 RUN apt-get install -y nodejs
 
 RUN apt-get install -y unzip git
 
 RUN npm install -g bower
-RUN npm install -g forever
+RUN npm install -g pm2
 
 RUN useradd --create-home --home /var/lib/patavi patavi
 
@@ -33,4 +33,4 @@ RUN unzip patavi.zip && mv patavi-*/server/* .
 RUN npm install --production
 RUN cd public && bower install
 
-CMD ["forever", "server.js"]
+CMD ["pm2", "start", "--no-daemon", "server.js"]

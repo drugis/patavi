@@ -8,6 +8,7 @@ CREATE TABLE patavi_task (
   time_to_live INTERVAL,
   service VARCHAR(128) NOT NULL,
   task JSONB NOT NULL,
+  script VARCHAR,
   status patavi_task_status NOT NULL DEFAULT 'unknown',
   result JSONB
 );

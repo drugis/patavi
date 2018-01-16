@@ -11,7 +11,7 @@
             [clojure.tools.logging :as log])
   (:import (org.apache.http.entity.mime MultipartEntityBuilder)
            (org.apache.http.entity ContentType)))
-
+  
 (defn amqp-options []
   {:host (or (env :patavi-broker-host) "localhost")
    :username (or (env :patavi-broker-user) "guest")
@@ -51,34 +51,35 @@
      :content-type (.getValue (.getContentType entity)) })))
 
 (defn- handle-request
-  [ch handler metadata msg]
+  [ch handler script-file metadata msg]
     (let [reply-to (:reply-to metadata)
           task-id (:correlation-id metadata)
           work (chan)
-          updater (partial send-update! ch task-id)]
+          updater (partial send-update! ch task-id)
+          script-payload (json/generate-string {:script (slurp script-file)})]
+      (lb/publish ch "" reply-to script-payload { :content-type "application/json" :correlation-id task-id })
       (thread (>!! work (wrap-exception handler msg updater)))
       (thread
         (let [result (<!! work)]
           (if (empty? (:files result))
             (lb/publish ch "" reply-to (:index result) { :content-type "application/json" :correlation-id task-id })
             (let [mp (multipart result)]
-              (lb/publish ch "" reply-to (:bytes mp) { :content-type (:content-type mp) :correlation-id task-id }))
-)
+              (lb/publish ch "" reply-to (:bytes mp) { :content-type (:content-type mp) :correlation-id task-id })))
           (lb/ack ch (:delivery-tag metadata))
           (close! work)))))
 
 (defn- handle-incoming
-  [handler]
+  [handler script-file]
   (fn [ch metadata ^bytes payload]
-    (try
-     (handle-request ch handler metadata (json/parse-string (String. payload)))
-     (catch Exception e (do (log/error e) (throw (Exception. e)))))))
+      (try
+        (handle-request ch handler script-file metadata (json/parse-string (String. payload)))
+        (catch Exception e (do (log/error e) (throw (Exception. e)))))))
 
 (defn start
-  [service handler]
+  [service script-file handler]
   (let [conn (rmq/connect (amqp-options))
         ch (lch/open conn)]
     (lb/qos ch 1)
     (lq/declare ch service {:exclusive false :durable true :auto-delete false})
     (le/declare ch "rpc_status" "topic" { :durable false })
-    (lc/subscribe ch service (handle-incoming handler) {:auto-ack false})))
+    (lc/subscribe ch service (handle-incoming handler script-file) {:auto-ack false})))

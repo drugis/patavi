@@ -10,7 +10,7 @@ RUN apt-get upgrade -y
 
 # Install R and required R packages
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9
-RUN echo 'deb http://cran.rstudio.com/bin/linux/ubuntu trusty/' > /etc/apt/sources.list.d/cran.list
+RUN echo 'deb http://cran.rstudio.com/bin/linux/ubuntu xenial/' > /etc/apt/sources.list.d/cran.list
 RUN apt-get update
 RUN apt-get install -y -q r-base-dev
 RUN apt-get install -y -q libxt-dev libcairo2-dev
@@ -20,9 +20,7 @@ RUN R -e 'install.packages("Cairo", repos="http://cran.rstudio.com/"); if (!requ
 RUN R -e 'install.packages("base64enc", repos="http://cran.rstudio.com/"); if (!require("base64enc")) quit(save="no", status=8)'
 
 # Install JRE
-RUN add-apt-repository ppa:openjdk-r/ppa 
-RUN apt-get update
-RUN apt-get install -y -q openjdk-7-jre-headless
+RUN apt-get install -y -q openjdk-8-jre-headless
 
 RUN apt-get install -y -q unzip
 
