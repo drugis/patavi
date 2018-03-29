@@ -25,7 +25,7 @@ ENV HOME /var/lib/patavi
 ADD ssl ssl
 
 ARG sha=master
-ARG repo=https://github.com/gertvv/patavi
+ARG repo=https://github.com/drugis/patavi
 
 RUN curl -sL $repo/archive/$sha.zip -o patavi.zip
 RUN unzip patavi.zip && mv patavi-*/server/* .
