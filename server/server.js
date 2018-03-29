@@ -44,7 +44,7 @@ app.use(function(req, res, next) {
   } else {
     res.header('Access-Control-Allow-Origin', 'http://addis.drugis.org');
   }
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Credentials');
   res.header('Access-Control-Allow-Credentials', true);
   next();
 });
