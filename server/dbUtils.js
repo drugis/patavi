@@ -1,9 +1,12 @@
 'use strict';
 var pg = require('pg');
 var async = require('async');
+var pool;
 
-module.exports = function(url) {
-  var dbUrl = url;
+module.exports = function(config) {
+  if(!pool) {
+    pool = new pg.Pool(config);
+  } 
 
   function startTransaction(client, done, callback) {
     client.query('START TRANSACTION', function(err) {
@@ -38,7 +41,7 @@ module.exports = function(url) {
         });
       }
 
-      pg.connect(dbUrl, function(err, client, done) {
+      pool.connect(function(err, client, done) {
         if (err) {
           return callback(err);
         }
@@ -57,7 +60,7 @@ module.exports = function(url) {
       });
     },
     query: function(text, values, callback) {
-      pg.connect(dbUrl, function(err, client, done) {
+      pool.connect(function(err, client, done) {
         if (err) {
           callback(err);
           return done();

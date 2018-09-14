@@ -12,14 +12,14 @@
     "amqplib": "^0.4.1",
     "async": "^2.0.0-rc.3",
     "biguint-format": "^1.0.0",
-    "body-parser": "^1.15.0",
+    "body-parser": "^1.18.3",
     "busboy": "~0.2.13",
     "client-certificate-auth": "^0.3.0",
-    "express": "^4.13.4",
+    "express": "^4.16.3",
     "express-ws": "^2.0.0-rc.1",
     "flake-idgen": "^1.0.0",
     "nodemailer": "^4.x.x",
-    "pg": "^4.5.3",
+    "pg": "~7.4.3",
     "when": "^3.7.7"
   }
 }
