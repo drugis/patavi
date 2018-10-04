@@ -6,7 +6,7 @@
   :description "Workers listen for tasks and dispatch them to RServe"
   :repositories {"sonatype-nexus-snapshots" "https://oss.sonatype.org/content/repositories/snapshots"
                  "sonatype-oss-public" "https://oss.sonatype.org/content/groups/public/"
-                 "drugis" "http://drugis.org/mvn"}
+                 "drugis" "https://drugis.org/mvn"}
   :plugins [[lein-environ "0.4.0"]]
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/core.async "0.1.242.0-44b1e3-alpha"]
