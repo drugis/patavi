@@ -2,10 +2,6 @@
 
 <img src="server/public/img/patavi_small.png" alt="logo" align="right" width="250" />
 
-**This is an alpha release.  We are using it internally in production,
-  but the API and organizational structure are subject to change.
-  Comments and suggestions are much appreciated.**
-
 ## Introduction
 Patavi is a distributed system for exposing R scripts as web services.
 It was created out of the need to run potentially very long running R scripts in a web browser while providing an interface to see the status updates.
