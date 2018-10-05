@@ -3,7 +3,7 @@ docker run -d --name patavi-server \
   --link postgres:postgres \
   -e PATAVI_BROKER_HOST=rabbit \
   -p 3000:3000 \
-  -e PATAVI_SELF=//localdocker:3000 \
+  -e PATAVI_SELF=//localhost:3000 \
   -e PATAVI_PORT=3000 \
   -e PATAVI_DB_HOST=postgres \
   -e PATAVI_DB_NAME=patavi \
