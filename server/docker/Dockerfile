@@ -17,12 +17,13 @@ RUN npm install -g bower
 RUN npm install -g pm2
 
 RUN useradd --create-home --home /var/lib/patavi patavi
-
-USER patavi
 WORKDIR /var/lib/patavi
-ENV HOME /var/lib/patavi
 
 ADD ssl ssl
+RUN chown -R patavi ssl
+
+USER patavi
+ENV HOME /var/lib/patavi
 
 ARG sha=master
 ARG repo=https://github.com/drugis/patavi
