@@ -1,5 +1,3 @@
-
-
 Patavi server dockerfile
 ========================
 
@@ -7,7 +5,7 @@ For more information on all components of the drugis project, please refer to th
 
 Prerequisites:
 
- - Create an `ssl` directory (e.g. /patavi/server/ssl/), containing:
+ - Create an `ssl` directory (e.g. /patavi/server/docker/ssl/), containing:
 
    - `/server-crt.pem` and `/server-key.pem`, the public/private certificate/key pair for the server
    - `/ca-crt.pem`, the CA certificate file for the server to trust client connections with. *Note*: This is only required if you expect connections from clients presenting certificates that are not in the normal trust chain, e.g. self-signed ones.
