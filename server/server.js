@@ -1,5 +1,6 @@
 'use strict';
 var express = require('express');
+var cors = require('cors');
 var fs = require('fs');
 var https = require('https');
 var bodyParser = require('body-parser');
@@ -33,21 +34,18 @@ var httpsOptions = {
   rejectUnauthorized: false
 };
 var app = express();
+
+var corsOptions = {
+  origin: true,
+  allowedHeaders: 'Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Credentials',
+  optionsSuccessStatus: 200,
+  credentials: true
+};
+
+app.options('*', cors(corsOptions));
 var server = https.createServer(httpsOptions, app);
 
 app.use(bodyParser.json());
-
-// Allow CORS (Cross Origin Resource Sharing) requests
-app.use(function(req, res, next) {
-  if (req.header('Origin')) {
-    res.header('Access-Control-Allow-Origin', req.header('Origin'));
-  } else {
-    res.header('Access-Control-Allow-Origin', 'http://addis.drugis.org');
-  }
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Credentials');
-  res.header('Access-Control-Allow-Credentials', true);
-  next();
-});
 
 // Client certificate authentication handling
 var clientCertificateAuth = require('client-certificate-auth');

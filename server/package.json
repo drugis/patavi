@@ -15,6 +15,7 @@
     "body-parser": "^1.18.3",
     "busboy": "~0.2.13",
     "client-certificate-auth": "^0.3.0",
+    "cors": "^2.8.4",
     "express": "^4.16.3",
     "express-ws": "^2.0.0-rc.1",
     "flake-idgen": "^1.0.0",
