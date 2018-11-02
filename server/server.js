@@ -43,6 +43,8 @@ var corsOptions = {
 };
 
 app.options('*', cors(corsOptions));
+app.use(cors(corsOptions));
+
 var server = https.createServer(httpsOptions, app);
 
 app.use(bodyParser.json());
