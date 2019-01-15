@@ -9,7 +9,7 @@ Prerequisites:
 
 - Create an `ssl` directory (e.g. /patavi/server/docker/ssl/), containing:
   - `/server-crt.pem` and `/server-key.pem`, the public/private certificate/key pair for the server
-  - `/ca-crt.pem`, the CA certificate file for the server to trust client connections with. *Note*: This is only required if you expect connections from clients presenting certificates that are not in the normal trust chain, e.g. self-signed ones.
+  - `/ca-crt.pem`, the CA certificate file for the server to trust client connections with. All clients attempting to post tasks must identify themselves with a certificate/key pair trusted by this authority.
 - Make sure to have a rabbitmq container running (see the README in the root of this repository for an example run command)
 - Have a postgres database running. The `setup-db.sh` script will initialise an existing `postgres` docker container with appropriate settings. Alternately, if you have a postgres running outside of a container, execute:
 
