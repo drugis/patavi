@@ -16,13 +16,16 @@ RUN apt-get install -y unzip git
 RUN npm install -g bower
 RUN npm install -g pm2
 
-RUN useradd --create-home --home /var/lib/patavi patavi
+RUN groupadd --gid 9999 drugis_group
+RUN useradd --create-home --home /var/lib/patavi --gid 9999 patavi
 WORKDIR /var/lib/patavi
 
-ADD ssl ssl
-RUN chown -R patavi ssl
+RUN mkdir ssl
+COPY ssl/ca-crt.pem ssl/
+RUN chown -R patavi:drugis_group ssl
 
 USER patavi
+
 ENV HOME /var/lib/patavi
 
 ARG sha=master
