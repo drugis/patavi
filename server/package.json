@@ -10,17 +10,24 @@
   "license": "ISC",
   "dependencies": {
     "amqplib": "^0.4.1",
-    "async": "^2.0.0-rc.3",
+    "async": "~3.1.0",
     "biguint-format": "^1.0.0",
     "body-parser": "^1.18.3",
     "busboy": "~0.2.13",
+    "chai": "^4.2.0",
+    "chai-spies": "^1.0.0",
     "client-certificate-auth": "^0.3.0",
     "cors": "^2.8.4",
     "express": "^4.16.3",
     "express-ws": "^2.0.0-rc.1",
     "flake-idgen": "^1.0.0",
+    "http-status-codes": "~1.0.5",
+    "lodash": "~4.17.14",
+    "mocha": "^6.2.0",
     "nodemailer": "^4.x.x",
     "pg": "~7.4.3",
+    "proxyquire": "^2.1.0",
+    "sinon": "^7.3.2",
     "when": "^3.7.7"
   }
 }
