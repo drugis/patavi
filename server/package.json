@@ -24,7 +24,7 @@
     "mocha": "^6.2.0",
     "nodemailer": "^4.x.x",
     "pg": "~7.4.3",
-    "startup-diagnostics": "drugis/startup-diagnostics#1.1.0",
+    "startup-diagnostics": "drugis/startup-diagnostics#1.1.1",
     "when": "^3.7.7",
     "winston": "^3.2.1"
   }
