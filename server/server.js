@@ -10,6 +10,7 @@ var util = require('./util');
 var pataviStore = require('./pataviStore');
 var async = require('async');
 var persistenceService = require('./persistenceService');
+var logger = require('./logger');
 
 var config = {
   user: process.env.PATAVI_DB_USER,
@@ -19,7 +20,7 @@ var config = {
 };
 var db = require('./dbUtils')(config);
 
-var StartupDiagnostics = require('startup-diagnostics')(db, 'Patavi');
+var StartupDiagnostics = require('startup-diagnostics')(db, logger, 'Patavi');
 
 var FlakeId = require('flake-idgen');
 var idGen = new FlakeId(); // FIXME: set unique generator ID
@@ -47,14 +48,14 @@ StartupDiagnostics.runStartupDiagnostics((errorBody) => {
   }
 });
 
-function initError(errorBody){
+function initError(errorBody) {
   app.get('*', function(req, res) {
     res.status(httpStatus.INTERNAL_SERVER_ERROR)
       .set('Content-Type', 'text/html')
       .send(errorBody);
   });
   app.listen(process.env.PATAVI_PORT, function() {
-    console.error('Access the diagnostics summary at https:' + pataviSelf);
+    logger.error('Access the diagnostics summary at https:' + pataviSelf);
   });
 }
 
@@ -120,7 +121,7 @@ function initApp() {
     }
 
     function wsSendErrorHandler(error) {
-      if (error) { console.log('Error sending on WebSocket: ', error); }
+      if (error) { logger.info('Error sending on WebSocket: ', error); }
     }
     return function(ws, req) {
       function receiveMessage(msg) {
@@ -156,7 +157,7 @@ function initApp() {
       }
       makeEventQueue(taskId, function(err, statusQ) {
         if (err) {
-          console.log('Error creating websocket', err);
+          logger.error('Error creating websocket', err);
           return ws.close();
         }
 
@@ -207,12 +208,12 @@ function initApp() {
   // API routes that depend on AMQP connection
   amqp.connect('amqp://' + process.env.PATAVI_BROKER_HOST, function(err, conn) {
     if (err) {
-      console.error(err);
+      logger.error(err);
       process.exit(1);
     }
     conn.createChannel(function(err, ch) {
       if (err) {
-        console.error(err);
+        logger.error(err);
         process.exit(1);
       }
 
@@ -222,7 +223,7 @@ function initApp() {
       var replyTo = 'rpc_result';
       ch.assertQueue(replyTo, { exclusive: false, durable: true }, function(err) {
         if (err) {
-          console.log(err);
+          logger.info(err);
           process.exit(1);
         }
 
@@ -382,7 +383,7 @@ function initApp() {
   });
 
   server.listen(process.env.PATAVI_PORT, function() {
-    console.log('Listening on https:' + pataviSelf);
+    logger.info('Listening on https:' + pataviSelf);
 
     sendNotificationEmail();
   });
@@ -402,8 +403,8 @@ function sendNotificationEmail() {
   };
   transport.sendMail(mailOptions, function(error, info) {
     if (error) {
-      return console.log(error);
+      return logger.error(error);
     }
-    console.log('Startup notification sent: ', info.response);
+    logger.info('Startup notification sent: ', info.response);
   });
 }
