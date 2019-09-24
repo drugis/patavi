@@ -10,7 +10,16 @@ var util = require('./util');
 var pataviStore = require('./pataviStore');
 var async = require('async');
 var persistenceService = require('./persistenceService');
-var StartupDiagnosticsService = require('./startupDiagnosticsService');
+
+var config = {
+  user: process.env.PATAVI_DB_USER,
+  database: process.env.PATAVI_DB_NAME,
+  password: process.env.PATAVI_DB_PASSWORD,
+  host: process.env.PATAVI_DB_HOST
+};
+var db = require('./dbUtils')(config);
+
+var StartupDiagnostics = require('startup-diagnostics')(db, 'Patavi');
 
 var FlakeId = require('flake-idgen');
 var idGen = new FlakeId(); // FIXME: set unique generator ID
@@ -30,7 +39,7 @@ var badRequestError = function() {
 // Serve over HTTPS, ask for client certificate
 var app = express();
 
-StartupDiagnosticsService.runStartupDiagnostics((errorBody) => {
+StartupDiagnostics.runStartupDiagnostics((errorBody) => {
   if (errorBody) {
     initError(errorBody);
   } else {
