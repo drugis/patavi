@@ -28,7 +28,8 @@
     "pg": "~7.4.3",
     "proxyquire": "^2.1.0",
     "sinon": "^7.3.2",
-    "startup-diagnostics": "drugis/startup-diagnostics#1.0.0",
-    "when": "^3.7.7"
+    "startup-diagnostics": "drugis/startup-diagnostics#1.1.0",
+    "when": "^3.7.7",
+    "winston": "^3.2.1"
   }
 }
