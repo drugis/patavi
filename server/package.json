@@ -14,8 +14,6 @@
     "biguint-format": "^1.0.0",
     "body-parser": "^1.18.3",
     "busboy": "~0.2.13",
-    "chai": "^4.2.0",
-    "chai-spies": "^1.0.0",
     "client-certificate-auth": "^0.3.0",
     "cors": "^2.8.4",
     "express": "^4.16.3",
@@ -26,8 +24,6 @@
     "mocha": "^6.2.0",
     "nodemailer": "^4.x.x",
     "pg": "~7.4.3",
-    "proxyquire": "^2.1.0",
-    "sinon": "^7.3.2",
     "startup-diagnostics": "drugis/startup-diagnostics#1.1.0",
     "when": "^3.7.7",
     "winston": "^3.2.1"
