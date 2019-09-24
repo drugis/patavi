@@ -3,8 +3,8 @@ FROM phusion/baseimage
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
 
-RUN apt-get update
-RUN apt-get upgrade -y -f -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" 
+RUN apt update
+RUN apt upgrade -y -f -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" 
 
 # Install nodejs
 RUN apt install -y curl
