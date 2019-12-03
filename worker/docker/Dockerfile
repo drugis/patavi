@@ -5,24 +5,25 @@ ENV LC_ALL C.UTF-8
 
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt-get update
-RUN apt-get upgrade -y
+RUN apt update
+RUN apt upgrade -y -f -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" 
 
 # Install R and required R packages
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9
+RUN gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
+RUN gpg -a --export E298A3A825C0D65DFD57CBB651716619E084DAB9 | apt-key add -
 RUN echo 'deb http://cran.rstudio.com/bin/linux/ubuntu xenial/' > /etc/apt/sources.list.d/cran.list
-RUN apt-get update
-RUN apt-get install -y -q r-base-dev
-RUN apt-get install -y -q libxt-dev libcairo2-dev
+RUN apt update
+RUN apt install -y -q r-base-dev
+RUN apt install -y -q libxt-dev libcairo2-dev
 RUN R -e 'install.packages("Rserve", repos="http://cran.rstudio.com/"); if (!require("Rserve")) quit(save="no", status=8)'
 RUN R -e 'install.packages("RJSONIO", repos="http://cran.rstudio.com/"); if (!require("RJSONIO")) quit(save="no", status=8)'
 RUN R -e 'install.packages("Cairo", repos="http://cran.rstudio.com/"); if (!require("Cairo")) quit(save="no", status=8)'
 RUN R -e 'install.packages("base64enc", repos="http://cran.rstudio.com/"); if (!require("base64enc")) quit(save="no", status=8)'
 
 # Install JRE
-RUN apt-get install -y -q openjdk-8-jre-headless
+RUN apt install -y -q openjdk-8-jre-headless
 
-RUN apt-get install -y -q unzip
+RUN apt install -y -q unzip
 
 # create patavi user
 RUN useradd --create-home --home /var/lib/patavi patavi
