@@ -1,4 +1,4 @@
-FROM phusion/baseimage
+FROM phusion/baseimage:18.04-1.0.0
 
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
@@ -34,7 +34,6 @@ ARG repo=https://github.com/drugis/patavi
 RUN curl -sL $repo/archive/$sha.zip -o patavi.zip
 RUN unzip patavi.zip && mv patavi-*/server/* .
 
-RUN npm install --production
 RUN cd public && yarn
 
 CMD ["pm2", "start", "--no-daemon", "server.js"]
