@@ -15,7 +15,7 @@ RUN add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_r
 RUN apt update
 RUN apt install -y -q r-base r-base-dev
 RUN apt install -y -q libxt-dev libcairo2-dev
-RUN R -e 'install.packages("Rserve", repos="http://cran.rstudio.com/"); if (!require("Rserve")) quit(save="no", status=8)'
+RUN R -e 'install.packages("https://www.rforge.net/Rserve/snapshot/Rserve_1.8-8.tar.gz", repos=NULL, type="source"); if (!require("Rserve")) quit(save="no", status=8)'
 RUN R -e 'install.packages("RJSONIO", repos="http://cran.rstudio.com/"); if (!require("RJSONIO")) quit(save="no", status=8)'
 RUN R -e 'install.packages("Cairo", repos="http://cran.rstudio.com/"); if (!require("Cairo")) quit(save="no", status=8)'
 RUN R -e 'install.packages("base64enc", repos="http://cran.rstudio.com/"); if (!require("base64enc")) quit(save="no", status=8)'
