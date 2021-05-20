@@ -19,13 +19,15 @@ jobs:
           cd worker
           lein uberjar
           cp target/patavi.worker-0.3-standalone.jar docker/
-          ls docker
+          cd ..
 
-      # - name: build docker image
-      #   run: cd worker/docker
+      - name: build docker image
+        run: |
+          cd worker/docker
+          docker build --tag addis/patavi-worker-base
 
-      # - name: docker login
-      #   run: docker login -u addis -p ${{ secrets.dockerRegistryPassword }}
+      - name: docker login
+        run: docker login -u addis -p ${{ secrets.dockerRegistryPassword }}
 
       # - name: docker push
       #   run: docker push registry.drugis.org/mcda-web-enterprise:"${GITHUB_REF##*/}"
