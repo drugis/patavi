@@ -1,0 +1,46 @@
+name: Patavi | push | worker build & push
+
+on:
+  push:
+    branches: ops/buildWorkerFlow
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-20.04]
+
+      - name: build worker uberjar
+        run: |
+          cd worker
+          lein uberjar
+          cp target/patavi.worker-0.3-standalone.jar docker/
+          ls docker
+
+      # - name: build docker image
+      #   run: cd worker/docker
+
+      # - name: docker login
+      #   run: docker login -u addis -p ${{ secrets.dockerRegistryPassword }}
+
+      # - name: docker push
+      #   run: docker push registry.drugis.org/mcda-web-enterprise:"${GITHUB_REF##*/}"
+
+      # - name: notify on slack channel on failure
+      #   if: failure()
+      #   uses: rtCamp/action-slack-notify@master
+      #   env:
+      #     SLACK_WEBHOOK: ${{ secrets.slackWebhook }}
+      #     SLACK_USERNAME: gitbot
+      #     SLACK_TITLE: 'New tag push:'
+      #     SLACK_MESSAGE: 'Building docker image failed'
+
+      # - name: notify on slack channel on success
+      #   uses: rtCamp/action-slack-notify@master
+      #   env:
+      #     SLACK_WEBHOOK: ${{ secrets.slackWebhook }}
+      #     SLACK_USERNAME: gitbot
+      #     SLACK_TITLE: 'New tag push:'
+      #     SLACK_MESSAGE: 'Docker image built'
