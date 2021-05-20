@@ -2,7 +2,7 @@ name: Patavi | push | worker build & push
 
 on:
   push:
-    branches: ops/buildWorkerFlow
+    branches: master
 
 jobs:
   test:
