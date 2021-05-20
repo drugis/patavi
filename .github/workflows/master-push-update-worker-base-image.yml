@@ -24,7 +24,7 @@ jobs:
       - name: build docker image
         run: |
           cd worker/docker
-          docker build --tag addis/patavi-worker-base
+          docker build --tag addis/patavi-worker-base .
 
       - name: docker login
         run: docker login -u addis -p ${{ secrets.dockerRegistryPassword }}
