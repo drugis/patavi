@@ -1,0 +1,40 @@
+name: Patavi | push | worker build & push
+
+on:
+  push:
+    branches: master
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-20.04]
+
+    steps:
+      - uses: actions/checkout@v1
+      - uses: webfactory/ssh-agent@v0.4.1
+        with:
+          ssh-private-key: ${{ secrets.deployPrivateKey }}
+
+      - name: build worker uberjar
+        run: |
+          cd worker
+          lein uberjar
+          cp target/patavi.worker-0.3-standalone.jar docker/
+          cd ..
+
+      - name: build docker image
+        run: |
+          cd worker/docker
+          docker build --tag addis/patavi-worker-base .
+
+      - name: docker login
+        run: docker login -u addis -p ${{ secrets.dockerRegistryPassword }}
+
+      - name: docker push
+        run: docker push addis/patavi-worker-base
+
+      - name: docker registry garbage collection
+        run: ssh -o StrictHostKeyChecking=no deploy@registry.drugis.org './garbage-collect-registry.sh'
