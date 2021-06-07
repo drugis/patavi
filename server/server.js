@@ -11,6 +11,7 @@ var pataviStore = require('./pataviStore');
 var async = require('async');
 var persistenceService = require('./persistenceService');
 var logger = require('./logger');
+const _ = require('lodash');
 
 var config = {
   user: process.env.PATAVI_DB_USER,
@@ -37,16 +38,21 @@ var badRequestError = function () {
   return error;
 };
 
-// Serve over HTTPS, ask for client certificate
 var app = express();
 
-StartupDiagnostics.runStartupDiagnostics((errorBody) => {
-  if (errorBody) {
-    initError(errorBody);
-  } else {
-    initApp();
-  }
-});
+function runDiagnostics(numberOftries) {
+  StartupDiagnostics.runStartupDiagnostics((errorBody) => {
+    if (errorBody && numberOftries === 0) {
+      initError(errorBody);
+    } else if (errorBody) {
+      setTimeout(_.partial(runDiagnostics, numberOftries - 1), 10000);
+    } else {
+      initApp();
+    }
+  });
+}
+
+runDiagnostics(6);
 
 function initError(errorBody) {
   app.get('*', function (req, res) {
@@ -116,15 +122,16 @@ function initApp() {
 
   var updatesWebSocket = function (app, ch, statusExchange) {
     function makeEventQueue(taskId, callback) {
-      ch.assertQueue('', {exclusive: true, autoDelete: true}, function (
-        err,
-        statusQ
-      ) {
-        if (!err) {
-          ch.bindQueue(statusQ.queue, statusExchange, taskId + '.*');
+      ch.assertQueue(
+        '',
+        {exclusive: true, autoDelete: true},
+        function (err, statusQ) {
+          if (!err) {
+            ch.bindQueue(statusQ.queue, statusExchange, taskId + '.*');
+          }
+          callback(err, statusQ);
         }
-        callback(err, statusQ);
-      });
+      );
     }
 
     function wsSendErrorHandler(error) {
@@ -222,56 +229,59 @@ function initApp() {
         res.send(taskDescription(taskId, service, status));
       }
 
-      async.waterfall([persistTask, assertServiceQueue, queueTask], function (
-        err
-      ) {
-        next(err);
-      });
+      async.waterfall(
+        [persistTask, assertServiceQueue, queueTask],
+        function (err) {
+          next(err);
+        }
+      );
     };
   };
 
   // API routes that depend on AMQP connection
-  amqp.connect('amqp://' + process.env.PATAVI_BROKER_HOST, function (
-    err,
-    conn
-  ) {
-    if (err) {
-      logger.error(err);
-      process.exit(1);
-    }
-    conn.createChannel(function (err, ch) {
+  amqp.connect(
+    'amqp://' + process.env.PATAVI_BROKER_HOST,
+    function (err, conn) {
       if (err) {
         logger.error(err);
         process.exit(1);
       }
-
-      var statusExchange = 'rpc_status';
-      ch.assertExchange(statusExchange, 'topic', {durable: false});
-
-      var replyTo = 'rpc_result';
-      ch.assertQueue(replyTo, {exclusive: false, durable: true}, function (
-        err
-      ) {
+      conn.createChannel(function (err, ch) {
         if (err) {
-          logger.info(err);
+          logger.error(err);
           process.exit(1);
         }
 
-        persistenceService(conn, replyTo, statusExchange, pataviStore);
+        var statusExchange = 'rpc_status';
+        ch.assertExchange(statusExchange, 'topic', {durable: false});
 
-        app.ws(
-          '/task/:taskId/updates',
-          updatesWebSocket(app, ch, statusExchange)
-        );
+        var replyTo = 'rpc_result';
+        ch.assertQueue(
+          replyTo,
+          {exclusive: false, durable: true},
+          function (err) {
+            if (err) {
+              logger.info(err);
+              process.exit(1);
+            }
 
-        app.post(
-          '/task',
-          authRequired,
-          postTask(app, ch, statusExchange, replyTo)
+            persistenceService(conn, replyTo, statusExchange, pataviStore);
+
+            app.ws(
+              '/task/:taskId/updates',
+              updatesWebSocket(app, ch, statusExchange)
+            );
+
+            app.post(
+              '/task',
+              authRequired,
+              postTask(app, ch, statusExchange, replyTo)
+            );
+          }
         );
       });
-    });
-  });
+    }
+  );
 
   // API routes that do not depend on AMQP connection
 
