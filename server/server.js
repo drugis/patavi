@@ -1,49 +1,48 @@
 'use strict';
-var express = require('express');
-var cors = require('cors');
-var fs = require('fs');
-var https = require('https');
-var httpStatus = require('http-status-codes');
-var bodyParser = require('body-parser');
-var amqp = require('amqplib/callback_api');
-var util = require('./util');
-var pataviStore = require('./pataviStore');
-var async = require('async');
-var persistenceService = require('./persistenceService');
-var logger = require('./logger');
+const express = require('express');
+const cors = require('cors');
+const fs = require('fs');
+const https = require('https');
+const bodyParser = require('body-parser');
+const amqp = require('amqplib/callback_api');
+const util = require('./util');
+const pataviStore = require('./pataviStore');
+const async = require('async');
+const persistenceService = require('./persistenceService');
+const logger = require('./logger');
 const _ = require('lodash');
 
-var config = {
+const config = {
   user: process.env.PATAVI_DB_USER,
   database: process.env.PATAVI_DB_NAME,
   password: process.env.PATAVI_DB_PASSWORD,
   host: process.env.PATAVI_DB_HOST
 };
-var db = require('./dbUtils')(config);
+const db = require('./dbUtils')(config);
 
-var StartupDiagnostics = require('startup-diagnostics')(db, logger, 'Patavi');
+const StartupDiagnostics = require('startup-diagnostics')(db, logger, 'Patavi');
 
-var FlakeId = require('flake-idgen');
-var idGen = new FlakeId(); // FIXME: set unique generator ID
+const FlakeId = require('flake-idgen');
+const idGen = new FlakeId(); // FIXME: set unique generator ID
 
-var pataviSelf = util.pataviSelf;
+const pataviSelf = util.pataviSelf;
 
-var isValidTaskId = function (id) {
+const isValidTaskId = function (id) {
   return /[0-9a-f]{16}/.test(id);
 };
 
-var badRequestError = function () {
-  var error = new Error('Bad request');
+const badRequestError = function () {
+  const error = new Error('Bad request');
   error.status = 400;
   return error;
 };
 
-var app = express();
+const app = express();
 
 function runDiagnostics(numberOftries) {
   StartupDiagnostics.runStartupDiagnostics((errorBody) => {
     if (errorBody && numberOftries === 0) {
-      initError(errorBody);
+      process.exit(1);
     } else if (errorBody) {
       setTimeout(_.partial(runDiagnostics, numberOftries - 1), 10000);
     } else {
@@ -53,18 +52,6 @@ function runDiagnostics(numberOftries) {
 }
 
 runDiagnostics(6);
-
-function initError(errorBody) {
-  app.get('*', function (req, res) {
-    res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .set('Content-Type', 'text/html')
-      .send(errorBody);
-  });
-  app.listen(process.env.PATAVI_PORT, function () {
-    logger.error('Access the diagnostics summary at https:' + pataviSelf);
-  });
-}
 
 function initApp() {
   var corsOptions = {
