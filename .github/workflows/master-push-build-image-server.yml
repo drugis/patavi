@@ -30,7 +30,7 @@ jobs:
         run: |
           cd server
           cp dockerCompose/Dockerfile .
-          docker build --tag registry.drugis.org/patavi-server:composed
+          docker build --tag registry.drugis.org/patavi-server:composed .
 
       - name: docker login
         run: docker login -u drugis -p ${{ secrets.dockerDrugisRegistryPassword }} registry.drugis.org
