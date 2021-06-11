@@ -19,7 +19,7 @@
                                               com.sun.jdmk/jmxtools
                                               com.sun.jmx/jmxri]]
                  [com.google.guava/guava "15.0"]
-                 [clj-commons/fs "1.6.307"]
+                 [me.raynes/fs "1.4.5"]
                  [org.rosuda/REngine "1.7.1-20130821.152906-1"]
                  [com.novemberain/langohr "3.5.0"]
                  [crypto-random "1.2.0"]

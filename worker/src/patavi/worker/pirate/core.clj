@@ -24,7 +24,7 @@
   [extra-packages wrapper]
   (let [packages (concat extra-packages default-packages)
         commands (map #(format load-template %) packages)]
-    (str (format bootstrap-template (fs/absolute wrapper)) (join "\n" commands))))
+    (str (format bootstrap-template (fs/absolute-path wrapper)) (join "\n" commands))))
 
 (def ^:private start-cmd
   "R CMD Rserve --RS-conf %1$s --vanilla > %2$s 2>&1 &")
@@ -32,7 +32,7 @@
 (defn- make-cmd
   [config-file]
   (let [log-dir (fs/expand-home (env :rserve-logs))
-        config-path (fs/absolute config-file)
+        config-path (fs/absolute-path config-file)
         executable (fs/temp-file "rserve")]
     (io/copy (format start-cmd config-path log-dir) executable)
     (fs/chmod "u+x" executable)
@@ -46,8 +46,8 @@
     (io/copy (slurp (io/resource "wrap.R")) wrapper)
     (io/copy (create-bootstrap packages wrapper) bootstrap)
     (io/copy (slurp (io/resource "Rserve.conf")) config-file)
-    (spit config-file (str "source " (fs/absolute bootstrap)) :append true)
-    (fs/exec (fs/absolute (make-cmd config-file)))))
+    (spit config-file (str "source " (fs/absolute-path bootstrap)) :append true)
+    (fs/exec (fs/absolute-path (make-cmd config-file)))))
 
 (defn initialize
   "Generates a bootstrap.R file and executes scripts/start.sh in a shell

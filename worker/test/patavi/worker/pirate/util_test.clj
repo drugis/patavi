@@ -5,6 +5,7 @@
 (def R (atom nil))
 (defn r-fixture [f]
   (reset! R (R/connect))
+  (Thread/sleep 5000)
   (f))
 
 (use-fixtures :once r-fixture)
@@ -40,7 +41,7 @@
   (testing "Transformation of list of maps"
     (is (= [{"foo" 10} {"bar" 5}] (R/into-clj (R/into-r [{"foo" 10} {"bar" 5}]))))
     (is (= {"b" {"a" [{"foo" 10} {"bar" 5}]}} (R/into-clj (R/into-r {"b" {"a" [{"foo" 10} {"bar" 5}]}}))))
-    (is (= {"test" [ {"aap" 3 "noot" 4} {"aap" 8 "noot" -5} ]} (R/into-clj (R/into-r {"test" [ {"aap" 3 "noot" 4} {"aap" 8 "noot" -5} ]}))))
+    (is (= {"test" [{"aap" 3 "noot" 4} {"aap" 8 "noot" -5}]} (R/into-clj (R/into-r {"test" [{"aap" 3 "noot" 4} {"aap" 8 "noot" -5}]}))))
     (is (= {"qux" [{"foo" 10} {"bar" 5}]} (R/into-clj (R/into-r {"qux" [{"foo" 10} {"bar" 5}]}))))))
 
 (deftest test-copy-files
@@ -48,8 +49,8 @@
     (let [file (doto (java.io.File/createTempFile "tmp" ".stuff") .deleteOnExit)]
       (spit file "foobar")
       (R/copy! @R file (.getName file))
-      (is (not (= (R/parse @R (str "readLines('"(.getName file)"')")) "foo")))
-      (is (= (R/parse @R (str "readLines('"(.getName file)"')"))) "foobar"))))
+      (is (not (= (R/parse @R (str "readLines('" (.getName file) "')")) "foo")))
+      (is (= (R/parse @R (str "readLines('" (.getName file) "')"))) "foobar"))))
 
 (deftest test-r-assignments
   (testing "Assignments to RServe"
@@ -71,6 +72,6 @@
     (R/assign @R "foo" {"b" {"a" [{"foo" 10} {"bar" 5}]}})
     (is (= (R/retrieve @R "foo") {"b" {"a" [{"foo" 10} {"bar" 5}]}})))
   (testing "Assignment of map list of maps"
-    (R/assign @R "bar" {"test" [ {"aap" 3 "noot" 4} {"aap" 8 "noot" -5} ]})
-    (is (= (R/retrieve @R "bar") {"test" [ {"aap" 3 "noot" 4} {"aap" 8 "noot" -5} ]}))))
+    (R/assign @R "bar" {"test" [{"aap" 3 "noot" 4} {"aap" 8 "noot" -5}]})
+    (is (= (R/retrieve @R "bar") {"test" [{"aap" 3 "noot" 4} {"aap" 8 "noot" -5}]}))))
 
