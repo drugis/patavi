@@ -16,7 +16,6 @@ RUN groupadd --gid 9999 drugis_group
 RUN useradd --create-home --home /var/lib/patavi --gid 9999 patavi
 
 COPY . /var/lib/patavi
-# RUN chown -R patavi /var/lib/patavi
 WORKDIR /var/lib/patavi
 RUN chown -R patavi:drugis_group ssl
 
