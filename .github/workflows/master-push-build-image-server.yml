@@ -2,7 +2,9 @@ name: Patavi server | push | build docker compose container
 
 on:
   push:
-    branches: master
+    tags:
+      - '*'
+
 jobs:
   test:
     runs-on: ${{ matrix.os }}

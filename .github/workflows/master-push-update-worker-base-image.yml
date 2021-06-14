@@ -2,7 +2,8 @@ name: Patavi | push | worker build & push
 
 on:
   push:
-    branches: master
+    tags:
+      - '*'
 
 jobs:
   test:
