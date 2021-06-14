@@ -1,14 +1,12 @@
 (ns patavi.worker.pirate.core
-  (:require [clojure.java.io :as io]
-            [clojure.core.async :refer [go >! <! filter< chan]]
-            [clojure.string :refer [split join]]
-            [clojure.java.shell :refer [sh]]
-            [patavi.worker.pirate.util :as pirate]
+  (:require [cheshire.core :refer [encode]]
+            [clojure.java.io :as io]
+            [clojure.string :refer [join]]
             [clojure.tools.logging :as log]
+            [crypto.random :as crypto]
             [environ.core :refer [env]]
             [me.raynes.fs :as fs]
-            [cheshire.core :as json :only [encode decode]]
-            [crypto.random :as crypto])
+            [patavi.worker.pirate.util :as pirate])
   (:import (org.rosuda.REngine REngineException)
            (org.rosuda.REngine.Rserve RConnection)))
 
@@ -66,10 +64,10 @@
   (let [filename (crypto.random/hex 8)]
     (if (nil? script)
       (throw (IllegalArgumentException.
-               (str "Could not source script file to R")))
+              (str "Could not source script file to R")))
       (do
         (pirate/copy! R script filename)
-        (.voidEval R (str "source('"filename"')"))
+        (.voidEval R (str "source('" filename "')"))
         (.removeFile R filename)))))
 
 (defn- cause
@@ -87,13 +85,12 @@
   [method params callback]
   (with-open [R (pirate/connect callback)]
     (try
-      (do
-        (source-script! R @script-file)
-        (pirate/assign R "params" (json/encode params))
-        (pirate/assign R "files" [])
-        (let [call (format "exec(%s, params)" method)
-              result (pirate/parse R call)
-              files (pirate/retrieve R "files")]
-          {:index result
-           :files (doall (map (fn [desc] (assoc (dissoc desc "file") "content" (pirate/read-and-unlink-file! R (desc "file")))) files))}))
+      (source-script! R @script-file)
+      (pirate/assign R "params" (encode params))
+      (pirate/assign R "files" [])
+      (let [call (format "exec(%s, params)" method)
+            result (pirate/parse R call)
+            files (pirate/retrieve R "files")]
+        {:index result
+         :files (doall (map (fn [desc] (assoc (dissoc desc "file") "content" (pirate/read-and-unlink-file! R (desc "file")))) files))})
       (catch Exception e (do (log/error e) (throw (Exception. (cause e) e)))))))
