@@ -36,4 +36,4 @@ RUN unzip patavi.zip && mv patavi-*/server/* .
 
 RUN cd public && yarn
 
-CMD ["node", "server.js"]
+CMD ["pm2", "start", "--no-daemon", "server.js"]
