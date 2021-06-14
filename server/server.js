@@ -41,7 +41,7 @@ const app = express();
 
 function runDiagnostics(numberOftries) {
   StartupDiagnostics.runStartupDiagnostics((errorBody) => {
-    if (errorBody && numberOftries === 0) {
+    if (numberOftries <= 0) {
       process.exit(1);
     } else if (errorBody) {
       setTimeout(_.partial(runDiagnostics, numberOftries - 1), 10000);
