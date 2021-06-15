@@ -2,8 +2,7 @@ name: Patavi server | push | build docker compose container
 
 on:
   push:
-    tags:
-      - '*'
+    branches: 'master'
 
 jobs:
   test:
