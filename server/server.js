@@ -1,64 +1,57 @@
 'use strict';
-var express = require('express');
-var cors = require('cors');
-var fs = require('fs');
-var https = require('https');
-var httpStatus = require('http-status-codes');
-var bodyParser = require('body-parser');
-var amqp = require('amqplib/callback_api');
-var util = require('./util');
-var pataviStore = require('./pataviStore');
-var async = require('async');
-var persistenceService = require('./persistenceService');
-var logger = require('./logger');
+const express = require('express');
+const cors = require('cors');
+const fs = require('fs');
+const https = require('https');
+const bodyParser = require('body-parser');
+const amqp = require('amqplib/callback_api');
+const util = require('./util');
+const pataviStore = require('./pataviStore');
+const async = require('async');
+const persistenceService = require('./persistenceService');
+const logger = require('./logger');
+const _ = require('lodash');
 
-var config = {
+const config = {
   user: process.env.PATAVI_DB_USER,
   database: process.env.PATAVI_DB_NAME,
   password: process.env.PATAVI_DB_PASSWORD,
   host: process.env.PATAVI_DB_HOST
 };
-var db = require('./dbUtils')(config);
+const db = require('./dbUtils')(config);
 
-var StartupDiagnostics = require('startup-diagnostics')(db, logger, 'Patavi');
+const StartupDiagnostics = require('startup-diagnostics')(db, logger, 'Patavi');
 
-var FlakeId = require('flake-idgen');
-var idGen = new FlakeId(); // FIXME: set unique generator ID
+const FlakeId = require('flake-idgen');
+const idGen = new FlakeId(); // FIXME: set unique generator ID
 
-var pataviSelf = util.pataviSelf;
+const pataviSelf = util.pataviSelf;
 
-var isValidTaskId = function (id) {
+const isValidTaskId = function (id) {
   return /[0-9a-f]{16}/.test(id);
 };
 
-var badRequestError = function () {
-  var error = new Error('Bad request');
+const badRequestError = function () {
+  const error = new Error('Bad request');
   error.status = 400;
   return error;
 };
 
-// Serve over HTTPS, ask for client certificate
-var app = express();
+const app = express();
 
-StartupDiagnostics.runStartupDiagnostics((errorBody) => {
-  if (errorBody) {
-    initError(errorBody);
-  } else {
-    initApp();
-  }
-});
-
-function initError(errorBody) {
-  app.get('*', function (req, res) {
-    res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .set('Content-Type', 'text/html')
-      .send(errorBody);
-  });
-  app.listen(process.env.PATAVI_PORT, function () {
-    logger.error('Access the diagnostics summary at https:' + pataviSelf);
+function runDiagnostics(numberOftries) {
+  StartupDiagnostics.runStartupDiagnostics((errorBody) => {
+    if (numberOftries <= 0) {
+      process.exit(1);
+    } else if (errorBody) {
+      setTimeout(_.partial(runDiagnostics, numberOftries - 1), 10000);
+    } else {
+      initApp();
+    }
   });
 }
+
+runDiagnostics(6);
 
 function initApp() {
   var corsOptions = {
@@ -116,15 +109,16 @@ function initApp() {
 
   var updatesWebSocket = function (app, ch, statusExchange) {
     function makeEventQueue(taskId, callback) {
-      ch.assertQueue('', {exclusive: true, autoDelete: true}, function (
-        err,
-        statusQ
-      ) {
-        if (!err) {
-          ch.bindQueue(statusQ.queue, statusExchange, taskId + '.*');
+      ch.assertQueue(
+        '',
+        {exclusive: true, autoDelete: true},
+        function (err, statusQ) {
+          if (!err) {
+            ch.bindQueue(statusQ.queue, statusExchange, taskId + '.*');
+          }
+          callback(err, statusQ);
         }
-        callback(err, statusQ);
-      });
+      );
     }
 
     function wsSendErrorHandler(error) {
@@ -222,56 +216,59 @@ function initApp() {
         res.send(taskDescription(taskId, service, status));
       }
 
-      async.waterfall([persistTask, assertServiceQueue, queueTask], function (
-        err
-      ) {
-        next(err);
-      });
+      async.waterfall(
+        [persistTask, assertServiceQueue, queueTask],
+        function (err) {
+          next(err);
+        }
+      );
     };
   };
 
   // API routes that depend on AMQP connection
-  amqp.connect('amqp://' + process.env.PATAVI_BROKER_HOST, function (
-    err,
-    conn
-  ) {
-    if (err) {
-      logger.error(err);
-      process.exit(1);
-    }
-    conn.createChannel(function (err, ch) {
+  amqp.connect(
+    'amqp://' + process.env.PATAVI_BROKER_HOST,
+    function (err, conn) {
       if (err) {
         logger.error(err);
         process.exit(1);
       }
-
-      var statusExchange = 'rpc_status';
-      ch.assertExchange(statusExchange, 'topic', {durable: false});
-
-      var replyTo = 'rpc_result';
-      ch.assertQueue(replyTo, {exclusive: false, durable: true}, function (
-        err
-      ) {
+      conn.createChannel(function (err, ch) {
         if (err) {
-          logger.info(err);
+          logger.error(err);
           process.exit(1);
         }
 
-        persistenceService(conn, replyTo, statusExchange, pataviStore);
+        var statusExchange = 'rpc_status';
+        ch.assertExchange(statusExchange, 'topic', {durable: false});
 
-        app.ws(
-          '/task/:taskId/updates',
-          updatesWebSocket(app, ch, statusExchange)
-        );
+        var replyTo = 'rpc_result';
+        ch.assertQueue(
+          replyTo,
+          {exclusive: false, durable: true},
+          function (err) {
+            if (err) {
+              logger.info(err);
+              process.exit(1);
+            }
 
-        app.post(
-          '/task',
-          authRequired,
-          postTask(app, ch, statusExchange, replyTo)
+            persistenceService(conn, replyTo, statusExchange, pataviStore);
+
+            app.ws(
+              '/task/:taskId/updates',
+              updatesWebSocket(app, ch, statusExchange)
+            );
+
+            app.post(
+              '/task',
+              authRequired,
+              postTask(app, ch, statusExchange, replyTo)
+            );
+          }
         );
       });
-    });
-  });
+    }
+  );
 
   // API routes that do not depend on AMQP connection
 
