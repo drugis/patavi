@@ -5,7 +5,7 @@ x-app: &default-app
 
 services:
   postgres:
-    <<: *default-app
+    restart: always
     image: postgres
     container_name: postgres-composed
     environment:
@@ -15,7 +15,7 @@ services:
       - ./initPataviDB.sh:/docker-entrypoint-initdb.d/initPataviDB.sh
 
   rabbit:
-    <<: *default-app
+    restart: always
     image: rabbitmq:3-management
     container_name: rabbit-composed
     healthcheck:
@@ -26,7 +26,7 @@ services:
       retries: 5
 
   patavi-server-composed:
-    <<: *default-app
+    restart: always
     image: registry.drugis.org/patavi-server:composed
     container_name: patavi-server-composed
     ports:
