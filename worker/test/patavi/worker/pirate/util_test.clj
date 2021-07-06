@@ -13,8 +13,8 @@
 (deftest test-has-r-connection
   (testing "Connection to RServe"
     (is (= (.isConnected @R) true))
-    (is (= (R/parse @R "'package:RJSONIO' %in% search()")) true)
-    (is (= (R/parse @R "'package:foo' %in% search()")) false)
+    (is (= (R/parse @R "'package:RJSONIO' %in% search()") true))
+    (is (= (R/parse @R "'package:foo' %in% search()") false))
     (is (= (count (R/parse @R "rnorm(100)")) 100))))
 
 (deftest test-transforms
@@ -50,7 +50,7 @@
       (spit file "foobar")
       (R/copy! @R file (.getName file))
       (is (not (= (R/parse @R (str "readLines('" (.getName file) "')")) "foo")))
-      (is (= (R/parse @R (str "readLines('" (.getName file) "')"))) "foobar"))))
+      (is (= (R/parse @R (str "readLines('" (.getName file) "')")) "foobar")))))
 
 (deftest test-r-assignments
   (testing "Assignments to RServe"
