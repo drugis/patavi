@@ -5,31 +5,35 @@ var Busboy = require('busboy');
 
 function parseMultipart(content, contentType, callback) {
   try {
-    var busboy = new Busboy({ headers: { 'content-type': contentType } });
+    var busboy = new Busboy({headers: {'content-type': contentType}});
 
     var index = {};
     var files = [];
 
-    busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
-      var content = new Buffer(0);
-      file.on('data', function(data) {
+    busboy.on('file', function (fieldname, file, filename, encoding, mimetype) {
+      var content = Buffer.alloc(0);
+      file.on('data', function (data) {
         content = Buffer.concat([content, data]);
       });
-      file.on('end', function() {
+      file.on('end', function () {
         if (fieldname === 'index') {
           try {
             index = JSON.parse(content.toString());
-          } catch(e) {
+          } catch (e) {
             callback('error parsing model: ' + content.toString());
           }
         } else {
-          files.push({ 'path': filename, 'content_type': mimetype, 'content': content });
+          files.push({
+            path: filename,
+            content_type: mimetype,
+            content: content
+          });
         }
       });
     });
 
-    busboy.on('finish', function() {
-      callback(null, { index: index, files: files });
+    busboy.on('finish', function () {
+      callback(null, {index: index, files: files});
     });
 
     var bufferStream = new stream.PassThrough();
@@ -45,8 +49,8 @@ function parseMessage(content, contentType, callback) {
   if (contentType && contentType === 'application/json') {
     try {
       var parsed = JSON.parse(content.toString());
-      callback(null, { index: parsed, files: [] });
-    } catch(err) {
+      callback(null, {index: parsed, files: []});
+    } catch (err) {
       callback('error parsing model: ' + content.toString());
     }
   } else if (contentType && contentType.startsWith(mp)) {
@@ -56,8 +60,8 @@ function parseMessage(content, contentType, callback) {
   }
 }
 
-module.exports = function(conn, queueName, statusExchange, pataviStore) {
-  conn.createChannel(function(err, ch) {
+module.exports = function (conn, queueName, statusExchange, pataviStore) {
+  conn.createChannel(function (err, ch) {
     if (err) {
       console.error(err);
       process.exit(1);
@@ -65,50 +69,68 @@ module.exports = function(conn, queueName, statusExchange, pataviStore) {
 
     function persist(msg) {
       var taskId = msg.properties.correlationId;
-      parseMessage(msg.content, msg.properties.contentType, function(err, result) {
-        if (err) {
-          console.log(err);
-          ch.ack(msg); // FIXME
-          return;
+      parseMessage(
+        msg.content,
+        msg.properties.contentType,
+        function (err, result) {
+          if (err) {
+            console.log(err);
+            ch.ack(msg); // FIXME
+            return;
+          }
+          if (result.index.script) {
+            pataviStore.saveScript(taskId, result.index.script, function (err) {
+              if (err) {
+                // TODO: handle DB errors
+                return console.log(err);
+              }
+              ch.ack(msg);
+            });
+          } else {
+            var taskStatus =
+              result.index.status === 'failed' ? 'failed' : 'done';
+            pataviStore.persistResult(
+              taskId,
+              taskStatus,
+              result,
+              function (err) {
+                if (err) {
+                  // TODO: handle DB errors
+                  return console.log(err);
+                }
+                ch.publish(
+                  statusExchange,
+                  taskId + '.end',
+                  util.asBuffer(util.resultMessage(taskId, taskStatus))
+                );
+                ch.ack(msg);
+              }
+            );
+          }
         }
-        if (result.index.script) {
-          pataviStore.saveScript(taskId, result.index.script, function(err) {
-            if (err) {
-              // TODO: handle DB errors
-              return console.log(err);
-            }
-            ch.ack(msg);            
-          });
-        } else {
-          var taskStatus = result.index.status === 'failed' ? 'failed' : 'done';
-          pataviStore.persistResult(taskId, taskStatus, result, function(err) {
-            if (err) {
-              // TODO: handle DB errors
-              return console.log(err);
-            }
-            ch.publish(statusExchange, taskId + '.end', util.asBuffer(util.resultMessage(taskId, taskStatus)));
-            ch.ack(msg);
-          });
-        }
-      });
+      );
     }
 
     ch.prefetch(1);
 
-    ch.assertExchange(statusExchange, 'topic', { durable: false });
+    ch.assertExchange(statusExchange, 'topic', {durable: false});
 
-    ch.assertQueue(queueName, { exclusive: false, durable: true }, function(err) {
-      if (err) {
-        console.log(err);
-        process.exit(1);
-      }
-
-      ch.consume(queueName, persist, { noAck: false }, function(err) {
+    ch.assertQueue(
+      queueName,
+      {exclusive: false, durable: true},
+      function (err) {
         if (err) {
           console.log(err);
           process.exit(1);
         }
-      });
-    });
+
+        ch.consume(queueName, persist, {noAck: false}, function (err) {
+          if (err) {
+            console.log(err);
+            process.exit(1);
+          }
+        });
+      }
+    );
   });
 };

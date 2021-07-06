@@ -205,7 +205,7 @@ function initApp() {
       }
 
       function queueTask(q) {
-        ch.sendToQueue(service, new Buffer(JSON.stringify(req.body)), {
+        ch.sendToQueue(service, Buffer.from(JSON.stringify(req.body)), {
           correlationId: taskId,
           replyTo: replyTo
         });
