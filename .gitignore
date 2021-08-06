@@ -25,3 +25,6 @@ tags
 Icon
 
 server/node_modules
+
+**/.vscode
+**/.lsp

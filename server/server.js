@@ -1,9 +1,8 @@
 'use strict';
 const express = require('express');
 const cors = require('cors');
-const fs = require('fs');
-const https = require('https');
-const bodyParser = require('body-parser');
+const http = require('http');
+const {json} = require('body-parser');
 const amqp = require('amqplib/callback_api');
 const util = require('./util');
 const pataviStore = require('./pataviStore');
@@ -25,7 +24,7 @@ const StartupDiagnostics = require('startup-diagnostics')(db, logger, 'Patavi');
 const FlakeId = require('flake-idgen');
 const idGen = new FlakeId(); // FIXME: set unique generator ID
 
-const pataviSelf = util.pataviSelf;
+const pataviSelf = process.env.PATAVI_SELF;
 
 const isValidTaskId = function (id) {
   return /[0-9a-f]{16}/.test(id);
@@ -64,26 +63,13 @@ function initApp() {
 
   app.options('*', cors(corsOptions));
   app.use(cors(corsOptions));
-  app.use(bodyParser.json({limit: '5mb'}));
+  app.use(json({limit: '5mb'}));
 
-  var httpsOptions = {
-    key: fs.readFileSync('ssl/server-key.pem'),
-    cert: fs.readFileSync('ssl/server-crt.pem'),
-    ca: fs.readFileSync('ssl/ca-crt.pem'),
-    requestCert: true,
-    rejectUnauthorized: false
-  };
-  var server = https.createServer(httpsOptions, app);
-
-  // Client certificate authentication handling
-  var clientCertificateAuth = require('client-certificate-auth');
-  var authRequired = clientCertificateAuth(function () {
-    return true; // we trust any cert signed by our own CA
-  });
+  var server = http.createServer(app);
 
   // Patavi dashboard
-  app.get('/', authRequired);
-  app.get('/index.html', authRequired);
+  app.get('/', util.tokenAuth);
+  app.get('/index.html', util.tokenAuth);
   app.use(express.static('public'));
 
   require('express-ws')(app, server);
@@ -94,20 +80,20 @@ function initApp() {
       service: service,
       status: status,
       _links: {
-        self: {href: 'https:' + pataviSelf + '/task/' + taskId},
-        updates: {href: 'wss:' + pataviSelf + '/task/' + taskId + '/updates'},
-        task: {href: 'https:' + pataviSelf + '/task/' + taskId + '/task'}
+        self: {href: 'http://' + pataviSelf + '/task/' + taskId},
+        updates: {href: 'wss://' + pataviSelf + '/task/' + taskId + '/updates'},
+        task: {href: 'https://' + pataviSelf + '/task/' + taskId + '/task'}
       }
     };
     if (status === 'failed' || status === 'done') {
       description._links.results = {
-        href: 'https:' + pataviSelf + '/task/' + taskId + '/results'
+        href: 'http://' + pataviSelf + '/task/' + taskId + '/results'
       };
     }
     return description;
   };
 
-  var updatesWebSocket = function (app, ch, statusExchange) {
+  var updatesWebSocket = function (ch, statusExchange) {
     function makeEventQueue(taskId, callback) {
       ch.assertQueue(
         '',
@@ -178,7 +164,7 @@ function initApp() {
     };
   };
 
-  var postTask = function (app, ch, statusExchange, replyTo) {
+  var postTask = function (ch, statusExchange, replyTo) {
     return function (req, res, next) {
       var service = req.query.service;
       var ttl = req.query.ttl ? req.query.ttl : null;
@@ -211,7 +197,7 @@ function initApp() {
         });
 
         res.status(201);
-        res.location('https:' + pataviSelf + '/task/' + taskId);
+        res.location('http://' + pataviSelf + '/task/' + taskId);
         var status = q.consumerCount === 0 ? 'no-workers' : 'unknown';
         res.send(taskDescription(taskId, service, status));
       }
@@ -256,13 +242,13 @@ function initApp() {
 
             app.ws(
               '/task/:taskId/updates',
-              updatesWebSocket(app, ch, statusExchange)
+              updatesWebSocket(ch, statusExchange)
             );
 
             app.post(
               '/task',
-              authRequired,
-              postTask(app, ch, statusExchange, replyTo)
+              util.tokenAuth,
+              postTask(ch, statusExchange, replyTo)
             );
           }
         );
@@ -288,7 +274,7 @@ function initApp() {
       pataviStore.getScript(taskId, function (err) {
         if (!err) {
           taskInfo._links.script = {
-            href: 'https:' + pataviSelf + '/task/' + taskId + '/script'
+            href: 'http://' + pataviSelf + '/task/' + taskId + '/script'
           };
         }
         res.send(taskInfo);
@@ -401,7 +387,7 @@ function initApp() {
     });
   });
 
-  app.delete('/task/:taskId', authRequired, function (req, res, next) {
+  app.delete('/task/:taskId', util.tokenAuth, function (req, res, next) {
     var taskId = req.params.taskId;
     if (!isValidTaskId(taskId)) {
       return next(badRequestError());
@@ -425,32 +411,6 @@ function initApp() {
   });
 
   server.listen(process.env.PATAVI_PORT, function () {
-    logger.info('Listening on https:' + pataviSelf);
-
-    sendNotificationEmail();
-  });
-}
-
-function sendNotificationEmail() {
-  if (
-    !process.env.PATAVI_EMAIL_URI ||
-    !process.env.PATAVI_EMAIL_TO ||
-    !process.env.PATAVI_EMAIL_FROM
-  ) {
-    return;
-  }
-
-  var nodemailer = require('nodemailer');
-  var transport = nodemailer.createTransport(process.env.PATAVI_EMAIL_URI);
-  var mailOptions = {
-    to: process.env.PATAVI_EMAIL_TO,
-    from: process.env.PATAVI_EMAIL_FROM,
-    subject: '[patavi server] started on ' + pataviSelf + ' EOM'
-  };
-  transport.sendMail(mailOptions, function (error, info) {
-    if (error) {
-      return logger.error(error);
-    }
-    logger.info('Startup notification sent: ', info.response);
+    logger.info('Listening on http:' + pataviSelf);
   });
 }
