@@ -4,7 +4,7 @@ const cors = require('cors');
 const http = require('http');
 const {json} = require('body-parser');
 const amqp = require('amqplib/callback_api');
-const util = require('./util');
+const util = require('./util.js');
 const pataviStore = require('./pataviStore');
 const async = require('async');
 const persistenceService = require('./persistenceService');
@@ -24,7 +24,7 @@ const StartupDiagnostics = require('startup-diagnostics')(db, logger, 'Patavi');
 const FlakeId = require('flake-idgen');
 const idGen = new FlakeId(); // FIXME: set unique generator ID
 
-const pataviSelf = process.env.PATAVI_SELF;
+const pataviSelf = util.pataviSelf;
 
 const isValidTaskId = function (id) {
   return /[0-9a-f]{16}/.test(id);
@@ -70,7 +70,7 @@ function initApp() {
   // Patavi dashboard
   app.get('/', util.tokenAuth);
   app.get('/index.html', util.tokenAuth);
-  app.use(express.static('public'));
+  app.use('/', express.static(__dirname + '/public'));
 
   require('express-ws')(app, server);
 
@@ -80,14 +80,14 @@ function initApp() {
       service: service,
       status: status,
       _links: {
-        self: {href: 'http://' + pataviSelf + '/task/' + taskId},
-        updates: {href: 'wss://' + pataviSelf + '/task/' + taskId + '/updates'},
-        task: {href: 'https://' + pataviSelf + '/task/' + taskId + '/task'}
+        self: {href: util.getHttpBase() + '/task/' + taskId},
+        updates: {href: util.getWsBase() + '/task/' + taskId + '/updates'},
+        task: {href: util.getHttpBase() + '/task/' + taskId + '/task'}
       }
     };
     if (status === 'failed' || status === 'done') {
       description._links.results = {
-        href: 'http://' + pataviSelf + '/task/' + taskId + '/results'
+        href: util.getHttpBase() + '/task/' + taskId + '/results'
       };
     }
     return description;
@@ -164,19 +164,19 @@ function initApp() {
     };
   };
 
-  var postTask = function (ch, statusExchange, replyTo) {
+  var postTask = function (ch, _statusExchange, replyTo) {
     return function (req, res, next) {
       var service = req.query.service;
       var ttl = req.query.ttl ? req.query.ttl : null;
       var taskId = idGen.next().toString('hex');
-
-      var cert = req.connection.getPeerCertificate();
+      const authHeader = req.get(util.API_KEY_HEADER);
+      const creatorName = req.get(util.CREATOR_HEADER);
 
       function persistTask(callback) {
         pataviStore.persistTask(
           taskId,
-          cert.subject.CN,
-          cert.fingerprint,
+          creatorName,
+          authHeader,
           service,
           req.body,
           ttl,
