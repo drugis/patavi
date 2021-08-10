@@ -24,8 +24,6 @@ const StartupDiagnostics = require('startup-diagnostics')(db, logger, 'Patavi');
 const FlakeId = require('flake-idgen');
 const idGen = new FlakeId(); // FIXME: set unique generator ID
 
-const pataviSelf = util.pataviSelf;
-
 const isValidTaskId = function (id) {
   return /[0-9a-f]{16}/.test(id);
 };
@@ -197,7 +195,7 @@ function initApp() {
         });
 
         res.status(201);
-        res.location('http://' + pataviSelf + '/task/' + taskId);
+        res.location(util.getHttpBase() + '/task/' + taskId);
         var status = q.consumerCount === 0 ? 'no-workers' : 'unknown';
         res.send(taskDescription(taskId, service, status));
       }
@@ -274,7 +272,7 @@ function initApp() {
       pataviStore.getScript(taskId, function (err) {
         if (!err) {
           taskInfo._links.script = {
-            href: 'http://' + pataviSelf + '/task/' + taskId + '/script'
+            href: util.getHttpBase() + '/task/' + taskId + '/script'
           };
         }
         res.send(taskInfo);
@@ -411,6 +409,6 @@ function initApp() {
   });
 
   server.listen(process.env.PATAVI_PORT, function () {
-    logger.info('Listening on http:' + pataviSelf);
+    logger.info('Listening on ' + util.getHttpBase());
   });
 }

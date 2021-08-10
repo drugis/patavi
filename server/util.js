@@ -1,8 +1,10 @@
 const API_KEY_HEADER = 'x-api-key';
 const CREATOR_HEADER = 'x-client-name';
-const pataviSelf =
-  process.env.PATAVI_HOST +
-  (process.env.PATAVI_PORT ? ':' + process.env.PATAVI_PORT : '');
+const proxyHost = process.env.PATAVI_PROXY_HOST;
+const pataviSelf = proxyHost
+  ? proxyHost
+  : process.env.PATAVI_HOST +
+    (process.env.PATAVI_PORT ? ':' + process.env.PATAVI_PORT : '');
 const isSecure = process.env.SECURE_TRAFFIC === 'true';
 
 exports.API_KEY_HEADER = API_KEY_HEADER;
