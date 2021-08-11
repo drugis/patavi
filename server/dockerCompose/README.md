@@ -8,7 +8,7 @@ Prerequisites:
 - Have docker-compose installed (https://docs.docker.com/compose/install/).
 - Have the files in this folder on your system.
 
-The following components will be ran inside of this compose:
+The following components will be run inside of this compose:
 
 - A Patavi server.
 - A RabbitMQ.
@@ -17,6 +17,6 @@ The following components will be ran inside of this compose:
 
 How to run:
 
-In a terminal/command promt type `docker-compose up`. The first time this command is run, all necessary docker images will be downloaded. After this, the setup can be ran without an internet connection by using the same command. If, after the first time, you want to make sure you are using the latest version, use `docker-compose pull` before running `docker-compose up`.
+In a terminal/command prompt type `docker-compose up`. The first time this command is run, all necessary docker images will be downloaded. After this, the setup can be ran without an internet connection by using the same command. If, after the first time, you want to make sure you are using the latest version, use `docker-compose pull` before running `docker-compose up`.
 
 NB: **all services will be run with simple development/testing passwords. This is intended as a local, offline environment. For deployment in secure/online environments, apply different methodology and better security, or contact the developers for advice.**
