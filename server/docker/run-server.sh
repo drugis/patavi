@@ -10,4 +10,4 @@ docker run -d --name patavi-server \
   -e PATAVI_DB_NAME=patavi \
   -e PATAVI_DB_USER=patavi \
   -e PATAVI_DB_PASSWORD=develop \
-  addis/patavi:secure3
+  addis/patavi-server
