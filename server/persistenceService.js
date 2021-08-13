@@ -1,5 +1,5 @@
 'use strict';
-var util = require('./util');
+var util = require('./util.js');
 var stream = require('stream');
 var Busboy = require('busboy');
 
