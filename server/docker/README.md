@@ -30,7 +30,7 @@ docker run -d --name patavi-server-amqp \
   -e PATAVI_DB_USER=<db-user> \
   -e PATAVI_DB_PASSWORD=<db-pass> \
   -e SECURE_TRAFFIC=false \
-  -e PATAVI_AUTHORISED_TOKEN=someToken \
+  -e PATAVI_API_KEY=someApiKey \
 
   addis/patavi-server
 ```

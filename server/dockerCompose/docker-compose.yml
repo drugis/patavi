@@ -42,7 +42,7 @@ services:
       - PATAVI_DB_USER=patavi
       - PATAVI_PORT=3000
       - SECURE_TRAFFIC=false
-      - PATAVI_AUTHORISED_TOKEN=someToken
+      - PATAVI_API_KEY=someApiKey
 
 networks:
   default:

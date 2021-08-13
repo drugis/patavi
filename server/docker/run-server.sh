@@ -6,7 +6,7 @@ docker run -d --name patavi-server \
   -e PATAVI_PORT=3000 \
   -e PATAVI_HOST=localhost \
   -e SECURE_TRAFFIC=false \
-  -e PATAVI_AUTHORISED_TOKEN=someToken \
+  -e PATAVI_API_KEY=someApiKey \
   -e PATAVI_DB_HOST=postgres \
   -e PATAVI_DB_NAME=patavi \
   -e PATAVI_DB_USER=patavi \

@@ -30,7 +30,7 @@ export PATAVI_DB_PASSWORD=develop
 export PATAVI_HOST=localhost
 export PATAVI_PORT=3000
 export SECURE_TRAFFIC=false
-export PATAVI_AUTHORISED_TOKEN=someToken
+export PATAVI_API_KEY=someApiKey
 
 ```
 
