@@ -40,8 +40,9 @@ services:
       - PATAVI_DB_NAME=patavi
       - PATAVI_DB_PASSWORD=develop
       - PATAVI_DB_USER=patavi
-      - PATAVI_SELF=//localhost:3000
       - PATAVI_PORT=3000
+      - SECURE_TRAFFIC=false
+      - PATAVI_AUTHORISED_TOKEN=someToken
 
 networks:
   default:
