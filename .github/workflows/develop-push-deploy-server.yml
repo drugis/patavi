@@ -1,0 +1,90 @@
+name: Patavi-server | push | deploy
+
+on:
+  push:
+    branches: develop
+
+defaults:
+  run:
+    working-directory: './server'
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        node-version: ['12']
+        os: [ubuntu-20.04]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: ${{ runner.OS }}-build-${{ hashFiles('package.json') }}
+
+      - name: run yarn
+        run: yarn
+
+      - name: docker login
+        run: docker login -u addis -p ${{ secrets.dockerRegistryPassword }}
+
+      - name: build patavi server image
+        run: cd docker && docker build --tag addis/patavi-server:test --build-arg sha=`git rev-parse --short HEAD` .
+
+      - name: docker push patavi server image
+        run: docker push addis/patavi-server:test
+
+      - name: pull server image on server
+        run: ssh -o StrictHostKeyChecking=no deploy@patavi-test.drugis.org 'docker pull addis/patavi-server:test'
+
+      - name: remove patavi server container on the server
+        run: ssh -o StrictHostKeyChecking=no deploy@patavi-test.drugis.org 'docker rm -f patavi-server || true'
+
+      - name: run patavi server container on the server
+        run: >
+          ssh -o StrictHostKeyChecking=no deploy@patavi-test.drugis.org \
+          "docker run -d --link rabbit:rabbit \
+           -e PATAVI_BROKER_HOST=admin:${{ secrets.pataviTestBrokerPassword }}@rabbit \
+           -p 3000:3000 \
+           -e PATAVI_PORT=3000 \
+           -e PATAVI_DB_HOST=psql-test.drugis.org \
+           -e PATAVI_DB_NAME=patavi \
+           -e PATAVI_DB_USER=patavi \
+           -e PATAVI_DB_PASSWORD=${{ secrets.pataviDbPassword }} \
+           -e SECURE_TRAFFIC=true \
+           -e PATAVI_API_KEY=${{ secrets.pataviApiKey }} \
+           --name patavi-server \
+           addis/patavi-server:test"
+
+      # Without sleep, prune will remove the container.
+      - name: Sleep for 30 seconds
+        run: sleep 30
+
+      - name: prune docker on the patavi test server
+        run: ssh -o StrictHostKeyChecking=no deploy@patavi-test.drugis.org 'docker system prune -f'
+
+      - name: notify on slack channel on failure
+        if: failure()
+        uses: rtCamp/action-slack-notify@master
+        env:
+          SLACK_WEBHOOK: ${{ secrets.slackWebhook }}
+          SLACK_USERNAME: gitbot
+          SLACK_TITLE: 'Develop push:'
+          SLACK_MESSAGE: 'patavi-test deploy failed'
+
+      - name: notify on slack channel on success
+        uses: rtCamp/action-slack-notify@master
+        env:
+          SLACK_WEBHOOK: ${{ secrets.slackWebhook }}
+          SLACK_USERNAME: gitbot
+          SLACK_TITLE: 'Develop push:'
+          SLACK_MESSAGE: 'patavi-test deployed'

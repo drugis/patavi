@@ -1,0 +1,52 @@
+name: Patavi server | push | build docker compose container
+
+on:
+  push:
+    branches: 'master'
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        node-version: ['12']
+        os: [ubuntu-20.04]
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: webfactory/ssh-agent@v0.4.1
+        with:
+          ssh-private-key: ${{ secrets.deployPrivateKey }}
+
+      - name: build docker image
+        run: |
+          cd server
+          cp dockerCompose/Dockerfile .
+          docker build --tag registry.drugis.org/patavi-server:composed .
+
+      - name: docker login
+        run: docker login -u drugis -p ${{ secrets.dockerDrugisRegistryPassword }} registry.drugis.org
+
+      - name: docker push
+        run: docker push registry.drugis.org/patavi-server:composed
+
+      - name: docker registry garbage collection
+        run: ssh -o StrictHostKeyChecking=no deploy@registry.drugis.org './garbage-collect-registry.sh'
+
+      - name: notify on slack channel on failure
+        if: failure()
+        uses: rtCamp/action-slack-notify@master
+        env:
+          SLACK_WEBHOOK: ${{ secrets.slackWebhook }}
+          SLACK_USERNAME: gitbot
+          SLACK_TITLE: 'Tag push:'
+          SLACK_MESSAGE: 'Patavi server composed version creation failed'
+
+      - name: notify on slack channel on success
+        uses: rtCamp/action-slack-notify@master
+        env:
+          SLACK_WEBHOOK: ${{ secrets.slackWebhook }}
+          SLACK_USERNAME: gitbot
+          SLACK_TITLE: 'Tag push:'
+          SLACK_MESSAGE: 'Patavi server composed version creation succes'
