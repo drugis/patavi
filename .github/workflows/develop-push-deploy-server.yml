@@ -4,11 +4,11 @@ on:
   push:
     branches: develop
 
-jobs:
-  defaults:
-    run:
-      working-directory: './server'
+defaults:
+  run:
+    working-directory: './server'
 
+jobs:
   test:
     runs-on: ${{ matrix.os }}
 
