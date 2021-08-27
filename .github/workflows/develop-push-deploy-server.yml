@@ -68,7 +68,7 @@ jobs:
            --name patavi-server \
            addis/patavi-server:test"
 
-      # Without sleep, prune will remove the container.
+      # Without sleep, prune will remove the container..
       - name: Sleep for 30 seconds
         run: sleep 30
 
