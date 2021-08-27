@@ -38,7 +38,7 @@ exports.resultMessage = function (taskId, status) {
 
 exports.tokenAuth = function (request, response, next) {
   const authHeader = request.get(API_KEY_HEADER);
-  if (authHeader && authHeader === process.env.PATAVI_AUTHORISED_TOKEN) {
+  if (authHeader && authHeader === process.env.PATAVI_API_KEY) {
     next();
   } else {
     next({status: 401});
