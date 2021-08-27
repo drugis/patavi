@@ -58,7 +58,7 @@ jobs:
           "docker run -d --link rabbit:rabbit \
            -e PATAVI_BROKER_HOST=admin:${{ secrets.pataviTestBrokerPassword }}@rabbit \
            -p 3000:3000 \
-           -e PATAVI_HOST=patavi-test.drugis.org \
+           -e PATAVI_PROXY_HOST=patavi-test.drugis.org \
            -e PATAVI_PORT=3000 \
            -e PATAVI_DB_HOST=psql-test.drugis.org \
            -e PATAVI_DB_NAME=patavi \
