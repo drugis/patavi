@@ -19,6 +19,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - uses: webfactory/ssh-agent@v0.4.1
+        with:
+          ssh-private-key: ${{ secrets.deployPrivateKey }}
 
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
