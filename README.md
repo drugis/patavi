@@ -3,28 +3,29 @@
 <img src="server/public/img/patavi_small.png" alt="logo" align="right" width="250" />
 
 ## Introduction
+
 Patavi is a distributed system for exposing R scripts as web services.
 It was created out of the need to run potentially very long running R scripts in a web browser while providing an interface to see the status updates.
 
 ## Alternatives
+
 If you are looking for just a web-based interactive R environment checkout [RStudio Shiny](http://www.rstudio.com/shiny/) or [OpenCPU](https://www.opencpu.org/).
 If you just want to expose R scripts through HTTP see [FastRWeb](https://www.rforge.net/FastRWeb/) or one of the [many other options](http://cran.r-project.org/doc/FAQ/R-FAQ.html#R-Web-Interfaces).
-
 
 ## Usage
 
 The following components need to be running in the default configuration:
 
- - RabbitMQ message broker
- - Postgres database (initialize using server/schema.sql)
- - The server - an HTTP API to queue jobs and fetch results (nodejs)
- - Any number of workers
+- RabbitMQ message broker
+- Postgres database (initialize using server/schema.sql)
+- The server - an HTTP API to queue jobs and fetch results (nodejs)
+- Any number of workers
 
-Clients can queue jobs at the server if they present an SSL client certificate trusted by the server.
+Clients can queue jobs at the server if they present a API key trusted by the server.
 
 The following will start a RabbitMQ instance with default (guest/guest) credentials:
 
-```docker run -d --hostname my-rabbit --name my-rabbit -p 5672:5672 -p 15672:15672 rabbitmq:3-management```
+`docker run -d --hostname my-rabbit --name my-rabbit -p 5672:5672 -p 15672:15672 rabbitmq:3-management`
 
 How to install and start the rest of the prerequisites can be found in their respective readme's, to find the relevant readme's please refer to OVERALL-README.md in the root folder of the ADDIS-CORE project (Addis 2).
 
@@ -61,45 +62,44 @@ Results can be returned either as JSON (`application/json`) or as a multi-part r
 ![HTTP API architecture overview](doc/arch_http_api.png)
 
 The HTTP API is an additional layer on top of messaging and persistence.
-Write routes require a valid and trusted SSL client certificate to be presented to the server, while read-only routes are world readable.
+Write routes require a valid API key to be presented to the server, while read-only routes are world readable.
 In the typical configuration displayed above, a server application is responsible for queueing tasks, while status updates and results can be retrieved directly by a client-side application in the browser.
 A bower module for angular applications using this pattern is available at [gertvv/angular-patavi-client](https://github.com/gertvv/angular-patavi-client).
-The default HTTP API also serves a dashboard where a user can queue tasks, provided that a trusted client certificate is configured in their browser.
 
 The following routes are available:
 
- - `POST /task?service=$service` will persist and queue up a task for the given service. Expects a JSON request body. If successful, returns `201 Created` with a `Location` header pointing to the newly created task, as well as a JSON response body (see `GET /task/$taskId`).
- - `POST /task?service=$service&ttl=$ttl` queues up a task for the given service, with a time to live set by `$ttl` in ISO duration format, e.g. `PT5M` means a time to live of 5 minutes. The task and results will be removed some time after the time to live has expired, counting from task completion.
- - `GET /task/$taskId` returns basic task information:
-    ```
-    {
-      "id": "550e35d797400000",
-      "service": "slow",
-      "status": "done",
-      "_links": {
-        "self": { "href": "https://patavi.drugis.org/task/550e35d797400000" },
-        "results": { "href": "https://patavi.drugis.org/task/550e35d797400000/results" },
-        "updates": { "href": "wss://patavi.drugis.org/task/550e35d797400000/updates" }
-      }
+- `POST /task?service=$service` will persist and queue up a task for the given service. Expects a JSON request body. If successful, returns `201 Created` with a `Location` header pointing to the newly created task, as well as a JSON response body (see `GET /task/$taskId`).
+- `POST /task?service=$service&ttl=$ttl` queues up a task for the given service, with a time to live set by `$ttl` in ISO duration format, e.g. `PT5M` means a time to live of 5 minutes. The task and results will be removed some time after the time to live has expired, counting from task completion.
+- `GET /task/$taskId` returns basic task information:
+  ```
+  {
+    "id": "550e35d797400000",
+    "service": "slow",
+    "status": "done",
+    "_links": {
+      "self": { "href": "https://patavi.drugis.org/task/550e35d797400000" },
+      "results": { "href": "https://patavi.drugis.org/task/550e35d797400000/results" },
+      "updates": { "href": "wss://patavi.drugis.org/task/550e35d797400000/updates" }
     }
-    ```
-   The link to results will only appear once results are actually available.
- - `GET /status?task=$taskId1&task=$taskId2` returns basic task information for multiple tasks as a JSON array.
- - `DELETE /task/$taskId` will remove a task and its results from the database.
- - `GET /task/$taskId/results/` will return the results (index) of task execution as is, if available.
-   If the results are not (yet) available a `404 Not Found` response will be given.
- - `GET /task/$taskId/results/$fileName` will return a result file, if the results consist of multiple files. The index should contain links to all results files.
- - `WebSocket /task/$taskId/updates` will send messages of the form
-   ```
-   {
-     "taskId": "550e35d797400000",
-     "eventType": "done",
-     "eventData": {
-       "href": "https://patavi-test.drugis.org/task/550e35d797400000/results"
-     }
-   }
-   ```
-   If `eventType` is "progress", `eventData` contains progress information as sent by the worker. If `eventType` is "done" or "failed", the `eventData` contains a link to the results. If the task exists and ever completes or has already completed, at least one message with `eventType` "done" or "failed" will be sent to the client. It is therefore always safe to wait for such a message. Usage of the web socket is optional. If progress updates are not important, `/task/$taskId` can be polled periodically instead.
+  }
+  ```
+  The link to results will only appear once results are actually available.
+- `GET /status?task=$taskId1&task=$taskId2` returns basic task information for multiple tasks as a JSON array.
+- `DELETE /task/$taskId` will remove a task and its results from the database.
+- `GET /task/$taskId/results/` will return the results (index) of task execution as is, if available.
+  If the results are not (yet) available a `404 Not Found` response will be given.
+- `GET /task/$taskId/results/$fileName` will return a result file, if the results consist of multiple files. The index should contain links to all results files.
+- `WebSocket /task/$taskId/updates` will send messages of the form
+  ```
+  {
+    "taskId": "550e35d797400000",
+    "eventType": "done",
+    "eventData": {
+      "href": "https://patavi-test.drugis.org/task/550e35d797400000/results"
+    }
+  }
+  ```
+  If `eventType` is "progress", `eventData` contains progress information as sent by the worker. If `eventType` is "done" or "failed", the `eventData` contains a link to the results. If the task exists and ever completes or has already completed, at least one message with `eventType` "done" or "failed" will be sent to the client. It is therefore always safe to wait for such a message. Usage of the web socket is optional. If progress updates are not important, `/task/$taskId` can be polled periodically instead.
 
 Note that although the URLs of these routes are predictable, the only route that a client needs to be aware of is the task creation route. All other locations are communicated explicitly by the API.
 

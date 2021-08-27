@@ -19,13 +19,6 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.deployPrivateKey }}
 
-      - name: create ssl files
-        run: |
-          mkdir -p server/ssl
-          echo "${{ secrets.pataviComposeServerCrt }}" > server/ssl/server-crt.pem 
-          echo "${{ secrets.pataviComposeServerKey }}" > server/ssl/server-key.pem
-          echo "${{ secrets.pataviComposeCA }}" > server/ssl/ca-crt.pem
-
       - name: build docker image
         run: |
           cd server
