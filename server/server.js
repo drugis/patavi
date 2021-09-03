@@ -10,6 +10,7 @@ const async = require('async');
 const persistenceService = require('./persistenceService');
 const logger = require('./logger');
 const _ = require('lodash');
+const httpStatusCodes = require('http-status-codes');
 
 const config = {
   user: process.env.PATAVI_DB_USER,
@@ -30,7 +31,7 @@ const isValidTaskId = function (id) {
 
 const badRequestError = function () {
   const error = new Error('Bad request');
-  error.status = 400;
+  error.status = httpStatusCodes.StatusCodes.BAD_REQUEST;
   return error;
 };
 
@@ -51,11 +52,11 @@ function runDiagnostics(numberOftries) {
 runDiagnostics(6);
 
 function initApp() {
-  var corsOptions = {
+  const corsOptions = {
     origin: true,
     allowedHeaders:
       'Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Credentials',
-    optionsSuccessStatus: 200,
+    optionsSuccessStatus: httpStatusCodes.StatusCodes.OK,
     credentials: true
   };
 
@@ -63,7 +64,7 @@ function initApp() {
   app.use(cors(corsOptions));
   app.use(json({limit: '5mb'}));
 
-  var server = http.createServer(app);
+  const server = http.createServer(app);
 
   // Patavi dashboard
   app.get('/', util.tokenAuth);
@@ -72,8 +73,8 @@ function initApp() {
 
   require('express-ws')(app, server);
 
-  var taskDescription = function (taskId, service, status) {
-    var description = {
+  const taskDescription = function (taskId, service, status) {
+    const description = {
       id: taskId,
       service: service,
       status: status,
@@ -91,7 +92,7 @@ function initApp() {
     return description;
   };
 
-  var updatesWebSocket = function (ch, statusExchange) {
+  const updatesWebSocket = function (ch, statusExchange) {
     function makeEventQueue(taskId, callback) {
       ch.assertQueue(
         '',
@@ -194,7 +195,7 @@ function initApp() {
           replyTo: replyTo
         });
 
-        res.status(201);
+        res.status(httpStatusCodes.StatusCodes.CREATED);
         res.location(util.getHttpBase() + '/task/' + taskId);
         var status = q.consumerCount === 0 ? 'no-workers' : 'unknown';
         res.send(taskDescription(taskId, service, status));
@@ -227,29 +228,22 @@ function initApp() {
         ch.assertExchange(statusExchange, 'topic', {durable: false});
 
         var replyTo = 'rpc_result';
-        ch.assertQueue(
-          replyTo,
-          {exclusive: false, durable: true},
-          function (err) {
-            if (err) {
-              logger.info(err);
-              process.exit(1);
-            }
-
-            persistenceService(conn, replyTo, statusExchange, pataviStore);
-
-            app.ws(
-              '/task/:taskId/updates',
-              updatesWebSocket(ch, statusExchange)
-            );
-
-            app.post(
-              '/task',
-              util.tokenAuth,
-              postTask(ch, statusExchange, replyTo)
-            );
+        ch.assertQueue(replyTo, {exclusive: false, durable: true}, (err) => {
+          if (err) {
+            logger.info(err);
+            process.exit(1);
           }
-        );
+
+          persistenceService(conn, replyTo, statusExchange, pataviStore);
+
+          app.ws('/task/:taskId/updates', updatesWebSocket(ch, statusExchange));
+
+          app.post(
+            '/task',
+            util.tokenAuth,
+            postTask(ch, statusExchange, replyTo)
+          );
+        });
       });
     }
   );
@@ -307,7 +301,7 @@ function initApp() {
     }
     if (req.headers['if-modified-since'] || req.headers['if-none-match']) {
       // task never changes
-      res.status(304);
+      res.status(httpStatusCodes.StatusCodes.NOT_MODIFIED);
       res.end();
       return;
     }
@@ -328,7 +322,7 @@ function initApp() {
     }
     if (req.headers['if-modified-since'] || req.headers['if-none-match']) {
       // task never changes
-      res.status(304);
+      res.status(httpStatusCodes.StatusCodes.NOT_MODIFIED);
       res.end();
       return;
     }
@@ -349,7 +343,7 @@ function initApp() {
     }
     if (req.headers['if-modified-since'] || req.headers['if-none-match']) {
       // results never change
-      res.status(304);
+      res.status(httpStatusCodes.StatusCodes.NOT_MODIFIED);
       res.end();
       return;
     }
@@ -371,7 +365,7 @@ function initApp() {
     }
     if (req.headers['if-modified-since'] || req.headers['if-none-match']) {
       // results never change
-      res.status(304);
+      res.status(httpStatusCodes.StatusCodes.NOT_MODIFIED);
       res.end();
       return;
     }
@@ -394,18 +388,20 @@ function initApp() {
       if (err) {
         return next(err);
       }
-      res.status(200);
+      res.status(httpStatusCodes.StatusCodes.OK);
       res.end();
     });
   });
 
   // Render 401 Not Authorized error
   app.use(function (err, req, res, next) {
-    if (err.status !== 401) {
+    if (err.status !== httpStatusCodes.StatusCodes.UNAUTHORIZED) {
       return next(err);
     }
 
-    res.status(401).sendFile('error401.html', {root: __dirname});
+    res
+      .status(httpStatusCodes.StatusCodes.UNAUTHORIZED)
+      .sendFile('error401.html', {root: __dirname});
   });
 
   server.listen(process.env.PATAVI_PORT, function () {
