@@ -1,4 +1,4 @@
-name: Patavi-server | push | deploy
+name: Patavi-server develop | push | deploy
 
 on:
   push:
