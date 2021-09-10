@@ -56,7 +56,7 @@ jobs:
         run: >
           ssh -o StrictHostKeyChecking=no deploy@patavi.drugis.org \
           "docker run -d --link rabbit:rabbit \
-           -e PATAVI_BROKER_HOST=admin:${{ secrets.pataviTestBrokerPassword }}@rabbit \
+           -e PATAVI_BROKER_HOST=admin:${{ secrets.pataviLiveBrokerPassword }}@rabbit \
            -p 3000:3000 \
            -e PATAVI_PROXY_HOST=patavi.drugis.org \
            -e PATAVI_PORT=3000 \
@@ -73,7 +73,7 @@ jobs:
       - name: Sleep for 30 seconds
         run: sleep 30
 
-      - name: prune docker on the patavi test server
+      - name: prune docker on the patavi live server
         run: ssh -o StrictHostKeyChecking=no deploy@patavi.drugis.org 'docker system prune -f'
 
       - name: notify on slack channel on failure
@@ -83,7 +83,7 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.slackWebhook }}
           SLACK_USERNAME: gitbot
           SLACK_TITLE: 'Develop push:'
-          SLACK_MESSAGE: 'patavi-test deploy failed'
+          SLACK_MESSAGE: 'patavi-live deploy failed'
 
       - name: notify on slack channel on success
         uses: rtCamp/action-slack-notify@master
@@ -91,4 +91,4 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.slackWebhook }}
           SLACK_USERNAME: gitbot
           SLACK_TITLE: 'Develop push:'
-          SLACK_MESSAGE: 'patavi-test deployed'
+          SLACK_MESSAGE: 'patavi-live deployed'
