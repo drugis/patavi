@@ -63,7 +63,7 @@ function parseMessage(content, contentType, callback) {
 module.exports = function (conn, queueName, statusExchange, pataviStore) {
   conn.createChannel(function (err, ch) {
     if (err) {
-      console.error(err);
+      console.error(JSON.stringify(err));
       process.exit(1);
     }
 
