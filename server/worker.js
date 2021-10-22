@@ -10,12 +10,12 @@ var workerId = idGen.next().toString('hex');
 
 amqp.connect('amqp://' + process.env.PATAVI_BROKER_HOST, function (err, conn) {
   if (err) {
-    console.error(err);
+    console.error(JSON.stringify(err));
     process.exit(1);
   }
   conn.createChannel(function (err, ch) {
     if (err) {
-      console.error(err);
+      console.error(JSON.stringify(err));
     }
     var q = 'slow';
     var ex = 'rpc_status';
@@ -67,9 +67,9 @@ amqp.connect('amqp://' + process.env.PATAVI_BROKER_HOST, function (err, conn) {
             next(null, i);
           }, 1000);
         },
-        function (err, data) {
+        function (err) {
           if (err) {
-            console.error(err);
+            console.error(JSON.stringify(err));
           }
           console.log(' [x] Done');
 
