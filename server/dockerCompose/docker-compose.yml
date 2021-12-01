@@ -41,8 +41,10 @@ services:
       - PATAVI_DB_PASSWORD=develop
       - PATAVI_DB_USER=patavi
       - PATAVI_PORT=3000
+      - PATAVI_HOST=localhost
+      - PATAVI_PROXY_HOST=patavi-server-composed:3000
       - SECURE_TRAFFIC=false
-      - PATAVI_API_KEY=someApiKey
+      - PATAVI_API_KEY=coolkeybro
 
 networks:
   default:

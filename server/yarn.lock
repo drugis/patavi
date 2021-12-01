@@ -1355,9 +1355,9 @@ stack-trace@0.0.x:
   resolved "https://registry.yarnpkg.com/stack-trace/-/stack-trace-0.0.10.tgz#547c70b347e8d32b4e108ea1a2a159e5fdde19c0"
   integrity sha1-VHxws0fo0ytOEI6hoqFZ5f3eGcA=
 
-startup-diagnostics@drugis/startup-diagnostics#1.2.0:
-  version "1.2.0"
-  resolved "https://codeload.github.com/drugis/startup-diagnostics/tar.gz/304d61a0ed89b73fdae44181518abaec8ddb2669"
+startup-diagnostics@drugis/startup-diagnostics#1.2.2:
+  version "1.2.2"
+  resolved "https://codeload.github.com/drugis/startup-diagnostics/tar.gz/44a2376f74974ec0e5e2df668454f7e149d6a527"
   dependencies:
     amqplib "^0.8.0"
     async "^3.2.0"
