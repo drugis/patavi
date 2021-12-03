@@ -18,7 +18,7 @@ chmod u+x db.sh
 docker run -it --rm \
   --mount type=bind,source="$(pwd)"/.pgpass,target=/root/.pgpass \
   --mount type=bind,source="$(pwd)"/db.sh,target=/db.sh \
-  --mount type=bind,source="$(pwd)"/schema/schema.sql,target=/db-init.sql \
+  --mount type=bind,source="$(pwd)"/schema.sql,target=/db-init.sql \
   --link postgres:postgres postgres \
   /db.sh
 rm .pgpass
