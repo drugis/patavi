@@ -25,7 +25,7 @@ DECLARE
     RETURN NULL;
   END;
 END;
-$$;  LANGUAGE PLPGSQL;
+$$ LANGUAGE PLPGSQL;
 
 CREATE TRIGGER trigger_patavi_task_timeout
   AFTER INSERT ON patavi_task
