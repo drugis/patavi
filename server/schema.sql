@@ -1,3 +1,6 @@
+-- liquibase formatted sql
+-- changeset keijserjj:1
+
 CREATE TYPE patavi_task_status AS ENUM ( 'unknown', 'accepted', 'failed', 'done');
 CREATE TABLE patavi_task (
   id BIGINT PRIMARY KEY, -- flake ID
@@ -15,12 +18,12 @@ CREATE TABLE patavi_task (
 
 CREATE FUNCTION patavi_task_timeout() RETURNS trigger
   LANGUAGE plpgsql
-  AS $$
+  AS '
 BEGIN
   DELETE FROM patavi_task WHERE updated_at < NOW() - time_to_live;
   RETURN NULL;
 END;
-$$;
+';
 
 CREATE TRIGGER trigger_patavi_task_timeout
   AFTER INSERT ON patavi_task
@@ -33,3 +36,8 @@ CREATE TABLE patavi_file (
   content BYTEA,
   PRIMARY KEY (task_id, path)
 );
+--rollback DROP TABLE patavi_file;
+--rollback DROP TRIGGER trigger_patavi_task_timeout;
+--rollback DROP FUNCTION patavi_task_timeout;
+--rollback DROP TABLE patavi_task;
+--rollback DROP TYPE patavi_task_status;
