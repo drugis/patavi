@@ -18,14 +18,14 @@ CREATE TABLE patavi_task (
 
 CREATE FUNCTION patavi_task_timeout() RETURNS trigger
   LANGUAGE plpgsql
-  AS '
+  AS $$
 DECLARE
   BEGIN
     DELETE FROM patavi_task WHERE updated_at < NOW() - time_to_live;
     RETURN NULL;
   END;
 END;
-';
+$$;
 
 CREATE TRIGGER trigger_patavi_task_timeout
   AFTER INSERT ON patavi_task
