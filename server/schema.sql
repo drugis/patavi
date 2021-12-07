@@ -20,10 +20,9 @@ CREATE FUNCTION patavi_task_timeout() RETURNS trigger
   LANGUAGE plpgsql
   AS $$
 DECLARE
-  BEGIN
-    DELETE FROM patavi_task WHERE updated_at < NOW() - time_to_live;
-    RETURN NULL;
-  END;
+BEGIN
+  DELETE FROM patavi_task WHERE updated_at < NOW() - time_to_live;
+  RETURN NULL;
 END;
 $$;
 
