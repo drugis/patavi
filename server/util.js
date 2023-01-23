@@ -5,7 +5,7 @@ const pataviSelf = proxyHost
   ? proxyHost
   : process.env.PATAVI_HOST +
     (process.env.PATAVI_PORT ? ':' + process.env.PATAVI_PORT : '');
-const isSecure = process.env.SECURE_TRAFFIC === 'true';
+const isSecure = process.env.SECURE_TRAFFIC === 'true' || process.env.BEHIND_PROXY === 'true';
 
 exports.API_KEY_HEADER = API_KEY_HEADER;
 exports.CREATOR_HEADER = CREATOR_HEADER;
