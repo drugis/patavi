@@ -47,10 +47,11 @@ jobs:
         run: docker push addis/patavi-server:test
 
       - name: pull server image on server
-        run: ssh -J ${{ secrets.devJumpHost }} ${{ devInternalServer }} 'docker pull addis/patavi-server:test'
+        run: ssh -J ${{ secrets.devJumpHost }} ${{ secrets.devInternalServer }} 'docker pull addis/patavi-server:test'
 
       - name: remove patavi server container on the server
-        run: ssh -J ${{ secrets.devJumpHost }} ${{ devInternalServer }} \
+        run:
+          ssh -J ${{ secrets.devJumpHost }} ${{ secrets.devInternalServer }} \
           "if  systemctl list-unit-files | grep patavi-server
           then
           systemctl stop patavi-server
@@ -62,7 +63,7 @@ jobs:
 
       - name: run patavi server container on the server
         run: >
-          ssh -J ${{ secrets.devJumpHost }} ${{ devInternalServer }} \
+          ssh -J ${{ secrets.devJumpHost }} ${{ secrets.devInternalServer }} \
           "podman run -d \
             --network="slirp4netns:allow_host_loopback=true" \
             --restart on-failure \
@@ -82,17 +83,17 @@ jobs:
 
       - name: generate system service file
         run: >
-          ssh -J ${{ secrets.devJumpHost }} ${{ devInternalServer }} \
+          ssh -J ${{ secrets.devJumpHost }} ${{ secrets.devInternalServer }} \
           'podman generate systemd --name patavi-server > /etc/systemd/system/patavi-server.service'
 
       - name: stop patavi server container
         run: >
-          ssh -J ${{ secrets.devJumpHost }} ${{ devInternalServer }} \
+          ssh -J ${{ secrets.devJumpHost }} ${{ secrets.devInternalServer }} \
           'podman stop patavi-server'
 
       - name: stop patavi server container
         run: >
-          ssh -J ${{ secrets.devJumpHost }} ${{ devInternalServer }} \
+          ssh -J ${{ secrets.devJumpHost }} ${{ secrets.devInternalServer }} \
           "systemctl daemon-reload && \
             systemctl enable patavi-server && \
             systemctl enable patavi-server"
