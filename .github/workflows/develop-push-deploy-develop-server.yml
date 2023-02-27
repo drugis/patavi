@@ -47,34 +47,55 @@ jobs:
         run: docker push addis/patavi-server:test
 
       - name: pull server image on server
-        run: ssh -o StrictHostKeyChecking=no deploy@patavi-test.drugis.org 'docker pull addis/patavi-server:test'
+        run: ssh -J ${{ secrets.devJumpHost }} ${{ devInternalServer }} 'docker pull addis/patavi-server:test'
 
       - name: remove patavi server container on the server
-        run: ssh -o StrictHostKeyChecking=no deploy@patavi-test.drugis.org 'docker rm -f patavi-server || true'
+        run: ssh -J ${{ secrets.devJumpHost }} ${{ devInternalServer }} \
+          "if  systemctl list-unit-files | grep patavi-server
+          then
+          systemctl stop patavi-server
+          systemctl disable patavi-server
+          rm -f /etc/systemd/system/patavi-server.service
+          systemctl daemon-reload
+          podman rm patavi-server
+          fi"
 
       - name: run patavi server container on the server
         run: >
-          ssh -o StrictHostKeyChecking=no deploy@patavi-test.drugis.org \
-          "docker run -d --link rabbit:rabbit \
-           -e PATAVI_BROKER_HOST=admin:${{ secrets.pataviTestBrokerPassword }}@rabbit \
-           -p 3000:3000 \
-           -e PATAVI_PROXY_HOST=patavi-test.drugis.org \
-           -e PATAVI_PORT=3000 \
-           -e PATAVI_DB_HOST=psql-test.drugis.org \
-           -e PATAVI_DB_NAME=patavi \
-           -e PATAVI_DB_USER=patavi \
-           -e PATAVI_DB_PASSWORD=${{ secrets.pataviDbPassword }} \
-           -e SECURE_TRAFFIC=true \
-           -e PATAVI_API_KEY=${{ secrets.pataviApiKey }} \
-           --name patavi-server \
-           addis/patavi-server:test"
+          ssh -J ${{ secrets.devJumpHost }} ${{ devInternalServer }} \
+          "podman run -d \
+            --network="slirp4netns:allow_host_loopback=true" \
+            --restart on-failure \
+            -e PATAVI_BROKER_HOST=guest:guest@10.0.2.2 \
+            -e PATAVI_PROXY_HOST=patavi.dev.drugis.org \
+            -e BEHIND_PROXY=true \
+            -e PATAVI_PORT=3000 \
+            -e PATAVI_DB_HOST=10.0.2.2 \
+            -e PATAVI_DB_NAME=patavi \
+            -e PATAVI_DB_USER=patavi \
+            -e PATAVI_DB_PASSWORD=${{ secrets.pataviDbPassword }} \
+            -e SECURE_TRAFFIC=false \
+            -e PATAVI_API_KEY=${{ secrets.pataviApiKey }} \
+            -p 3000:3000 \
+            --name patavi-server \
+            addis/patavi-server:test"
 
-      # Without sleep, prune will remove the container.
-      - name: Sleep for 30 seconds
-        run: sleep 30
+      - name: generate system service file
+        run: >
+          ssh -J ${{ secrets.devJumpHost }} ${{ devInternalServer }} \
+          'podman generate systemd --name patavi-server > /etc/systemd/system/patavi-server.service'
 
-      - name: prune docker on the patavi test server
-        run: ssh -o StrictHostKeyChecking=no deploy@patavi-test.drugis.org 'docker system prune -f'
+      - name: stop patavi server container
+        run: >
+          ssh -J ${{ secrets.devJumpHost }} ${{ devInternalServer }} \
+          'podman stop patavi-server'
+
+      - name: stop patavi server container
+        run: >
+          ssh -J ${{ secrets.devJumpHost }} ${{ devInternalServer }} \
+          "systemctl daemon-reload && \
+            systemctl enable patavi-server && \
+            systemctl enable patavi-server"
 
       - name: notify on slack channel on failure
         if: failure()
