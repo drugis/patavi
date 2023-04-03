@@ -1,4 +1,4 @@
-name: Patavi-server main | push | deploy
+name: Patavi-server master | push | deploy
 
 on:
   push:
@@ -70,7 +70,7 @@ jobs:
       - name: pull server image on server
         run: ssh -J jumphost internalserver 'podman pull addis/patavi-server:live'
 
-       - name: remove patavi server container on the server
+      - name: remove patavi server container on the server
         run: >
           ssh -J jumphost internalserver \
           "if  systemctl list-unit-files | grep patavi-server
