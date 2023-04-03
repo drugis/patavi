@@ -43,17 +43,42 @@ jobs:
       # - name: docker push patavi server image
       #   run: docker push addis/patavi-server:test
 
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_KEY" > ~/.ssh/id_ed25519.key
+          chmod 600 ~/.ssh/id_ed25519.key
+          cat >>~/.ssh/config <<END
+          Host jumphost
+            HostName $SSH_JUMP_HOST
+            User $SSH_JUMP_USER
+            IdentityFile ~/.ssh/id_ed25519.key
+            StrictHostKeyChecking no
+          Host internalserver
+            HostName $SSH_INTERNAL_HOST
+            User $SSH_INTERNAL_USER  
+            IdentityFile ~/.ssh/id_ed25519.key
+            StrictHostKeyChecking no
+          END
+        env:
+          SSH_JUMP_USER: ${{ secrets.devJumpHostUser }}
+          SSH_KEY: ${{ secrets.deployPrivateKey }}
+          SSH_JUMP_HOST: ${{ secrets.devJumpHost }}
+          SSH_INTERNAL_HOST: ${{ secrets.devInternalServer }}
+          SSH_INTERNAL_USER: ${{ secrets.devInternalUser }}
+
       - name: pull server image on server
-        uses: appleboy/ssh-action@v0.1.8
-        with:
-          host: ${{ secrets.devJumpHost }}
-          username: ${{ secrets.devJumpHostUser }}
-          key: ${{ secrets.deployPrivateKey }}
-          proxy_host: ${{ secrets.devInternalServer }}
-          proxy_username: ${{ secrets.devInternalUser }}
-          proxy_key: ${{ secrets.deployPrivateKey }}
-          script: ls -al
-          debug: true
+        run: ssh -J jumphost internalserver 'ls -al'
+      #   uses: appleboy/ssh-action@v0.1.8
+      #   with:
+      #     host: ${{ secrets.devJumpHost }}
+      #     username: ${{ secrets.devJumpHostUser }}
+      #     key: ${{ secrets.deployPrivateKey }}
+      #     proxy_host: ${{ secrets.devInternalServer }}
+      #     proxy_username: ${{ secrets.devInternalUser }}
+      #     proxy_key: ${{ secrets.deployPrivateKey }}
+      #     script: ls -al
+      #     debug: true
 
       # - name: remove patavi server container on the server
       #   run:
