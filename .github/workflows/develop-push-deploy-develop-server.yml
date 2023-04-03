@@ -19,6 +19,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.deployPrivateKey }}
 
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
@@ -44,15 +47,18 @@ jobs:
       #   run: docker push addis/patavi-server:test
 
       - name: pull server image on server
-        uses: appleboy/ssh-action@v0.1.8
-        with:
-          host: ${{ secrets.devJumpHost }}
-          username: ${{ secrets.devJumpHostUser }}
-          key: ${{ secrets.deployPrivateKey }}
-          proxy_host: ${{ secrets.devInternalServer }}
-          proxy_username: ${{ secrets.devInternalUser }}
-          proxy_key: ${{ secrets.deployPrivateKey }}
-          script: docker pull addis/patavi-server:test
+        run: ssh -J ${{ secrets.devJumpHost }} ${{ secrets.devInternalServer }} -v 'docker pull addis/patavi-server:test'
+
+      # - name: pull server image on server
+      #   uses: appleboy/ssh-action@v0.1.8
+      #   with:
+      #     host: ${{ secrets.devJumpHost }}
+      #     username: ${{ secrets.devJumpHostUser }}
+      #     key: ${{ secrets.deployPrivateKey }}
+      #     proxy_host: ${{ secrets.devInternalServer }}
+      #     proxy_username: ${{ secrets.devInternalUser }}
+      #     proxy_key: ${{ secrets.deployPrivateKey }}
+      #     script: docker pull addis/patavi-server:test
 
       # - name: remove patavi server container on the server
       #   run:
