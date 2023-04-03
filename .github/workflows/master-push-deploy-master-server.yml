@@ -110,7 +110,7 @@ jobs:
       - name: stop patavi server container
         run: ssh -J jumphost internalserver 'podman stop patavi-server'
 
-      - name: stop patavi server container
+      - name: start patavi server container
         run: >
           ssh -J jumphost internalserver \
           "systemctl daemon-reload && \
