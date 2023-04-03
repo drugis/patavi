@@ -74,7 +74,7 @@ module.exports = function (conn, queueName, statusExchange, pataviStore) {
         msg.properties.contentType,
         function (err, result) {
           if (err) {
-            console.log(err);
+            console.log(JSON.stringify(err, null, 2));
             ch.ack(msg); // FIXME
             return;
           }
@@ -82,7 +82,7 @@ module.exports = function (conn, queueName, statusExchange, pataviStore) {
             pataviStore.saveScript(taskId, result.index.script, function (err) {
               if (err) {
                 // TODO: handle DB errors
-                return console.log(err);
+                return console.log(JSON.stringify(err, null, 2));
               }
               ch.ack(msg);
             });
@@ -96,7 +96,7 @@ module.exports = function (conn, queueName, statusExchange, pataviStore) {
               function (err) {
                 if (err) {
                   // TODO: handle DB errors
-                  return console.log(err);
+                  console.log(JSON.stringify(err, null, 2));
                 }
                 ch.publish(
                   statusExchange,
@@ -120,13 +120,13 @@ module.exports = function (conn, queueName, statusExchange, pataviStore) {
       {exclusive: false, durable: true},
       function (err) {
         if (err) {
-          console.log(err);
+          console.log(JSON.stringify(err, null, 2));
           process.exit(1);
         }
 
         ch.consume(queueName, persist, {noAck: false}, function (err) {
           if (err) {
-            console.log(err);
+            console.log(JSON.stringify(err, null, 2));
             process.exit(1);
           }
         });

@@ -123,7 +123,7 @@ jobs:
         env:
           SLACK_WEBHOOK: ${{ secrets.slackWebhook }}
           SLACK_USERNAME: gitbot
-          SLACK_TITLE: 'Develop push:'
+          SLACK_TITLE: 'Master push:'
           SLACK_MESSAGE: 'patavi-live deploy failed'
 
       - name: notify on slack channel on success
@@ -131,5 +131,5 @@ jobs:
         env:
           SLACK_WEBHOOK: ${{ secrets.slackWebhook }}
           SLACK_USERNAME: gitbot
-          SLACK_TITLE: 'Develop push:'
+          SLACK_TITLE: 'Master push:'
           SLACK_MESSAGE: 'patavi-live deployed'
