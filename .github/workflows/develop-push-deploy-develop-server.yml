@@ -68,66 +68,55 @@ jobs:
           SSH_INTERNAL_USER: ${{ secrets.devInternalUser }}
 
       - name: pull server image on server
-        run: ssh -J jumphost internalserver 'ls -al'
-      #   uses: appleboy/ssh-action@v0.1.8
-      #   with:
-      #     host: ${{ secrets.devJumpHost }}
-      #     username: ${{ secrets.devJumpHostUser }}
-      #     key: ${{ secrets.deployPrivateKey }}
-      #     proxy_host: ${{ secrets.devInternalServer }}
-      #     proxy_username: ${{ secrets.devInternalUser }}
-      #     proxy_key: ${{ secrets.deployPrivateKey }}
-      #     script: ls -al
-      #     debug: true
+        run: ssh -J jumphost internalserver 'podman pull addis/patavi-server:test'
 
-      # - name: remove patavi server container on the server
-      #   run:
-      #     ssh -J ${{ secrets.devJumpHost }} ${{ secrets.devInternalServer }} \
-      #     "if  systemctl list-unit-files | grep patavi-server
-      #     then
-      #     systemctl stop patavi-server
-      #     systemctl disable patavi-server
-      #     rm -f /etc/systemd/system/patavi-server.service
-      #     systemctl daemon-reload
-      #     podman rm patavi-server
-      #     fi"
+      - name: remove patavi server container on the server
+        run: ssh -J jumphost internalserver  \
+          "if  systemctl list-unit-files | grep patavi-server
+          then
+          systemctl stop patavi-server
+          systemctl disable patavi-server
+          rm -f /etc/systemd/system/patavi-server.service
+          systemctl daemon-reload
+          podman rm patavi-server
+          fi"
 
-      # - name: run patavi server container on the server
-      #   run: >
-      #     ssh -J ${{ secrets.devJumpHost }} ${{ secrets.devInternalServer }} \
-      #     "podman run -d \
-      #       --network="slirp4netns:allow_host_loopback=true" \
-      #       --restart on-failure \
-      #       -e PATAVI_BROKER_HOST=guest:guest@10.0.2.2 \
-      #       -e PATAVI_PROXY_HOST=patavi.dev.drugis.org \
-      #       -e BEHIND_PROXY=true \
-      #       -e PATAVI_PORT=3000 \
-      #       -e PATAVI_DB_HOST=10.0.2.2 \
-      #       -e PATAVI_DB_NAME=patavi \
-      #       -e PATAVI_DB_USER=patavi \
-      #       -e PATAVI_DB_PASSWORD=${{ secrets.pataviDbPassword }} \
-      #       -e SECURE_TRAFFIC=false \
-      #       -e PATAVI_API_KEY=${{ secrets.pataviApiKey }} \
-      #       -p 3000:3000 \
-      #       --name patavi-server \
-      #       addis/patavi-server:test"
+      - name: run patavi server container on the server
+        run: >
+          ssh -J jumphost internalserver \
+          "podman run -d \
+            --network="slirp4netns:allow_host_loopback=true" \
+            --restart on-failure \
+            -e PATAVI_BROKER_HOST=guest:guest@10.0.2.2 \
+            -e PATAVI_PROXY_HOST=patavi.dev.drugis.org \
+            -e BEHIND_PROXY=true \
+            -e PATAVI_PORT=3000 \
+            -e PATAVI_DB_HOST=10.0.2.2 \
+            -e PATAVI_DB_NAME=patavi \
+            -e PATAVI_DB_USER=patavi \
+            -e PATAVI_DB_PASSWORD=${{ secrets.pataviDbPassword }} \
+            -e SECURE_TRAFFIC=false \
+            -e PATAVI_API_KEY=${{ secrets.pataviApiKey }} \
+            -p 3000:3000 \
+            --name patavi-server \
+            addis/patavi-server:test"
 
-      # - name: generate system service file
-      #   run: >
-      #     ssh -J ${{ secrets.devJumpHost }} ${{ secrets.devInternalServer }} \
-      #     'podman generate systemd --name patavi-server > /etc/systemd/system/patavi-server.service'
+      - name: generate system service file
+        run: >
+          ssh -J jumphost internalserver \
+          'podman generate systemd --name patavi-server > /etc/systemd/system/patavi-server.service'
 
-      # - name: stop patavi server container
-      #   run: >
-      #     ssh -J ${{ secrets.devJumpHost }} ${{ secrets.devInternalServer }} \
-      #     'podman stop patavi-server'
+      - name: stop patavi server container
+        run: >
+          ssh -J jumphost internalserver \
+          'podman stop patavi-server'
 
-      # - name: stop patavi server container
-      #   run: >
-      #     ssh -J ${{ secrets.devJumpHost }} ${{ secrets.devInternalServer }} \
-      #     "systemctl daemon-reload && \
-      #       systemctl enable patavi-server && \
-      #       systemctl enable patavi-server"
+      - name: stop patavi server container
+        run: >
+          ssh -J jumphost internalserver \
+          "systemctl daemon-reload && \
+            systemctl enable patavi-server && \
+            systemctl enable patavi-server"
 
       - name: notify on slack channel on failure
         if: failure()
