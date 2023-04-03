@@ -115,7 +115,7 @@ jobs:
           ssh -J jumphost internalserver \
           "systemctl daemon-reload && \
             systemctl enable patavi-server && \
-            systemctl enable patavi-server"
+            systemctl start patavi-server"
 
       - name: notify on slack channel on failure
         if: failure()
