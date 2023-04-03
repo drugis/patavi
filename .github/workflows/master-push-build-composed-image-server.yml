@@ -14,10 +14,7 @@ jobs:
         os: [ubuntu-20.04]
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: webfactory/ssh-agent@v0.4.1
-        with:
-          ssh-private-key: ${{ secrets.deployPrivateKey }}
+      - uses: actions/checkout@v3
 
       - name: build docker image
         run: |
@@ -30,9 +27,6 @@ jobs:
 
       - name: docker push
         run: docker push registry.drugis.org/patavi-server:composed
-
-      - name: docker registry garbage collection
-        run: ssh -o StrictHostKeyChecking=no deploy@registry.drugis.org './garbage-collect-registry.sh'
 
       - name: notify on slack channel on failure
         if: failure()
