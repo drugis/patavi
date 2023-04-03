@@ -1,8 +1,12 @@
-name: Patavi-server master | push | deploy
+name: Patavi-server main | push | deploy
 
 on:
   push:
     branches: master
+
+defaults:
+  run:
+    working-directory: './server'
 
 jobs:
   test:
@@ -34,7 +38,7 @@ jobs:
         run: docker login -u addis -p ${{ secrets.dockerRegistryPassword }}
 
       - name: build patavi server image
-        run: cd server/docker && docker build --tag addis/patavi-server:live --build-arg sha=`git rev-parse --short HEAD` .
+        run: cd docker && docker build --tag addis/patavi-server:live --build-arg sha=`git rev-parse --short HEAD` .
 
       - name: docker push patavi server image
         run: docker push addis/patavi-server:live
