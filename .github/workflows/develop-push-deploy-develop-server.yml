@@ -71,15 +71,16 @@ jobs:
         run: ssh -J jumphost internalserver 'podman pull addis/patavi-server:test'
 
       - name: remove patavi server container on the server
-        run: ssh -J jumphost internalserver  \
+        run: >
+          ssh -J jumphost internalserver \
           "if  systemctl list-unit-files | grep patavi-server
-          then
-          systemctl stop patavi-server
-          systemctl disable patavi-server
-          rm -f /etc/systemd/system/patavi-server.service
-          systemctl daemon-reload
-          podman rm patavi-server
-          fi"
+            then
+            systemctl stop patavi-server
+            systemctl disable patavi-server
+            rm -f /etc/systemd/system/patavi-server.service
+            systemctl daemon-reload
+            podman rm patavi-server
+            fi"
 
       - name: run patavi server container on the server
         run: >
