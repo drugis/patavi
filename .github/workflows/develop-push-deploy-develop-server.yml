@@ -110,12 +110,12 @@ jobs:
       - name: stop patavi server container
         run: ssh -J jumphost internalserver 'podman stop patavi-server'
 
-      - name: stop patavi server container
+      - name: start patavi server service
         run: >
           ssh -J jumphost internalserver \
           "systemctl daemon-reload && \
             systemctl enable patavi-server && \
-            systemctl enable patavi-server"
+            systemctl start patavi-server"
 
       - name: notify on slack channel on failure
         if: failure()
