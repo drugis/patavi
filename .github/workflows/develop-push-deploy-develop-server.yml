@@ -79,7 +79,7 @@ jobs:
             systemctl disable patavi-server
             rm -f /etc/systemd/system/patavi-server.service
             systemctl daemon-reload
-            podman rm patavi-server
+            podman rm -f patavi-server
             fi"
 
       - name: run patavi server container on the server
