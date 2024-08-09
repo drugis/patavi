@@ -60,8 +60,8 @@ function parseMessage(content, contentType, callback) {
   }
 }
 
-module.exports = function (conn, queueName, statusExchange, pataviStore) {
-  conn.createChannel(function (err, ch) {
+module.exports = function (connection, queueName, statusExchange, pataviStore) {
+  connection.createChannel(function (err, ch) {
     if (err) {
       console.error(JSON.stringify(err));
       process.exit(1);
